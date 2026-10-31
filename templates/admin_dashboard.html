@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Runyankore Translator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-language"></i>
+                    <h2>Runyankore Admin</h2>
+                </div>
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>{{ username }}</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item active">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                
+                <a href="{{ url_for('admin_trash') }}" class="nav-item">
+                    <i class="fas fa-trash"></i> Trash Bin
+                </a>
+                
+                <a href="#translationsSection" class="nav-item" id="translationsLink">
+                    <i class="fas fa-list"></i> Translations
+                </a>
+                
+                <a href="{{ url_for('admin_searches') }}" class="nav-item">
+                    <i class="fas fa-search"></i> User Searches
+                </a>
+
+                <a href="{{ url_for('admin_review') }}" class="nav-item">
+                    <i class="fas fa-clipboard-check"></i> Review Translations
+                    <span class="pending-badge" id="pendingReviewCount">0</span>
+                </a>
+
+                <a href="{{ url_for('admin_synonyms') }}" class="nav-item">
+                    <i class="fas fa-link"></i> Manage Synonyms
+                </a>
+
+                <!-- Feedback Link with unread count -->
+                <a href="{{ url_for('admin_feedback') }}" class="nav-item">
+                    <i class="fas fa-comment"></i> Feedback
+                    {% if unread_feedback_count > 0 %}
+                    <span class="badge badge-danger">{{ unread_feedback_count }}</span>
+                    {% endif %}
+                </a>
+                
+                <a href="#" class="nav-item" id="addTranslationBtn">
+                    <i class="fas fa-plus-circle"></i> Add Translation
+                </a>
+                
+                <div class="nav-divider"></div>
+                
+                <a href="{{ url_for('admin_logout') }}" class="nav-item logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p><i class="fas fa-database"></i> SQLite Database</p>
+                <p>Version: 2.0.0</p>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+                <div class="top-bar-actions">
+                    
+                    <a href="/" class="btn-view-site" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> View Site
+                    </a>
+                    <button class="btn-refresh" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </header>
+            
+            <div class="dashboard-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-blue">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>{{ total }}</h3>
+                            <p>Total Translations</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-red">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>{{ deleted }}</h3>
+                            <p>In Trash</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-green">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>1</h3>
+                            <p>Active Admin</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-orange">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>SQLite</h3>
+                            <p>Database</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                    <div class="actions-grid">
+                        <a href="{{ url_for('admin_dashboard') }}" class="action-card" id="viewAllTranslations">  
+                            <i class="fas fa-list"></i>
+                            <span>View All Translations</span>
+                        </a>
+                        <a href="#" class="action-card" id="addNewTranslation">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add New Translation</span>
+                        </a>
+                        <a href="#" class="action-card" id="exportData">
+                            <i class="fas fa-download"></i>
+                            <span>Export Data</span>
+                        </a>
+                        <a href="#" class="action-card" id="importData">
+                            <i class="fas fa-upload"></i>
+                            <span>Import Data</span>
+                        </a>
+                        <a href="#" class="action-card" id="updateOfflineDB">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Update Offline DB</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Feedback Widget (Moved to proper location) -->
+                <div class="dashboard-widget feedback-widget">
+                    <div class="widget-header">
+                        <h3><i class="fas fa-comment"></i> Recent Feedback</h3>
+                        <a href="{{ url_for('admin_feedback') }}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="widget-content" id="recentFeedbackWidget">
+                        <div class="loading-spinner">Loading...</div>
+                    </div>
+                </div>
+                
+                <!-- Translations Table -->
+                <div class="translations-table-container" id="translationsSection">
+                    <h2><i class="fas fa-list"></i> All Translations ({{ translations|length }})</h2>
+                    
+                    <div class="filter-sort-controls">
+                        <div class="search-filter">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchInput" placeholder="Search translations...">
+                                <button class="clear-search" id="clearSearch" title="Clear search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <select id="searchField" class="search-field-select" title="Choose which field to search in">
+                                <option value="all">All fields</option>
+                                <option value="runyankore">Runyankore only</option>
+                                <option value="english">English only</option>
+                                <option value="category">Category only</option>
+                            </select>
+                        </div>
+                        
+                        <div class="sort-controls">
+                            <select id="sortBy" class="sort-select" title="Choose sorting method for translations">
+                                <option value="runyankore">Sort by Runyankore (A-Z)</option>
+                                <option value="runyankore_desc">Sort by Runyankore (Z-A)</option>
+                                <option value="english">Sort by English (A-Z)</option>
+                                <option value="english_desc">Sort by English (Z-A)</option>
+                                <option value="category">Sort by Category (A-Z)</option>
+                                <option value="category_desc">Sort by Category (Z-A)</option>
+                                <option value="id">Sort by ID (Oldest)</option>
+                                <option value="id_desc">Sort by ID (Newest)</option>
+                            </select>
+                            <button class="btn-sort-action" id="applySort">
+                                <i class="fas fa-sort"></i> Apply Sort
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="active-filters">
+                        <div id="activeFilterTags"></div>
+                        <button class="btn-clear-all" id="clearAllFilters">
+                            <i class="fas fa-times"></i> Clear All
+                        </button>
+                    </div>
+                    
+                    {% if translations %}
+                    <div class="table-responsive">
+                        <table class="translations-table" id="translationsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Runyankore</th>
+                                    <th>English</th>
+                                    <th>Category</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="translationsTableBody">
+                                {% for trans in translations %}
+                                <tr data-translation-id="{{ trans.id }}" 
+                                    data-runyankore="{{ trans.runyankore|lower }}"
+                                    data-english="{{ trans.english|lower }}"
+                                    data-category="{{ trans.category|default('general', true)|lower }}"
+                                    data-created="{{ trans.created_at }}">
+                                    <td>{{ trans.id }}</td>
+                                    <td><strong>{{ trans.runyankore }}</strong></td>
+                                    <td>{{ trans.english }}</td>
+                                    <td><span class="category-badge">{{ trans.category or 'general' }}</span></td>
+                                    <td>{{ trans.created_at[:10] if trans.created_at else 'N/A' }}</td>
+                                    <td class="action-buttons">
+                                        <button class="btn-edit" data-edit-id="{{ trans.id }}" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-delete" data-delete-id="{{ trans.id }}" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="table-info">
+                            <span id="tableCount">{{ translations|length }}</span> translations shown
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No translations yet</h3>
+                        <p>Add your first translation using the "Add Translation" button.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h2><i class="fas fa-history"></i> Recent Activity</h2>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <i class="fas fa-sign-in-alt success"></i>
+                            <div class="activity-details">
+                                <p>You logged in to the admin panel</p>
+                                <span class="activity-time">Just now</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <i class="fas fa-database"></i>
+                            <div class="activity-details">
+                                <p>Database connected successfully</p>
+                                <span class="activity-time">Today</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <i class="fas fa-server"></i>
+                            <div class="activity-details">
+                                <p>System running with {{ total }} translations</p>
+                                <span class="activity-time">Always</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Info -->
+                <div class="system-info-card">
+                    <h2><i class="fas fa-info-circle"></i> System Information</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <strong>Database:</strong> SQLite
+                        </div>
+                        <div class="info-item">
+                            <strong>Location:</strong> backend/data/translations.db
+                        </div>
+                        <div class="info-item">
+                            <strong>Translations:</strong> {{ total }} active, {{ deleted }} deleted
+                        </div>
+                        <div class="info-item">
+                            <strong>Admin Access:</strong> Single admin system
+                        </div>
+                        <div class="info-item">
+                            <strong>Frontend:</strong> Public access
+                        </div>
+                        <div class="info-item">
+                            <strong>Backend:</strong> Flask + SQLite
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Add Translation Modal -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus-circle"></i> Add New Translation</h3>
+                <button class="close-modal" id="closeAddModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addTranslationForm">
+                    <div class="form-group">
+                        <label for="addRunyankore"><i class="fas fa-font"></i> Runyankore</label>
+                        <input type="text" id="addRunyankore" placeholder="Enter Runyankore word/phrase" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addEnglish"><i class="fas fa-font"></i> English Translation</label>
+                        <input type="text" id="addEnglish" placeholder="Enter English translation" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addCategory"><i class="fas fa-tag"></i> Category (Optional)</label>
+                        <select id="addCategory">
+                            <option value="">Select Category</option>
+                            <option value="greetings">Greetings</option>
+                            <option value="food">Food</option>
+                            <option value="family">Family</option>
+                            <option value="animals">Animals</option>
+                            <option value="verbs">Verbs</option>
+                            <option value="nouns">Nouns</option>
+                            <option value="adjectives">Adjectives</option>
+                            <option value="numbers">Numbers</option>
+                            <option value="time">Time</option>
+                            <option value="places">Places</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelAddModal">Cancel</button>
+                <button class="btn-primary" id="submitAddTranslation">
+                    <i class="fas fa-check"></i> Add Translation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Translation Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Translation</h3>
+                <button class="close-modal" id="closeEditModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editTranslationForm">
+                    <input type="hidden" id="editTranslationId">
+                    <div class="form-group">
+                        <label for="editRunyankore"><i class="fas fa-font"></i> Runyankore</label>
+                        <input type="text" id="editRunyankore" placeholder="Enter Runyankore word/phrase" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEnglish"><i class="fas fa-font"></i> English Translation</label>
+                        <input type="text" id="editEnglish" placeholder="Enter English translation" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCategory"><i class="fas fa-tag"></i> Category</label>
+                        <select id="editCategory">
+                            <option value="general">General</option>
+                            <option value="greetings">Greetings</option>
+                            <option value="food">Food</option>
+                            <option value="family">Family</option>
+                            <option value="animals">Animals</option>
+                            <option value="verbs">Verbs</option>
+                            <option value="nouns">Nouns</option>
+                            <option value="adjectives">Adjectives</option>
+                            <option value="numbers">Numbers</option>
+                            <option value="time">Time</option>
+                            <option value="places">Places</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelEditModal">Cancel</button>
+                <button class="btn-primary" id="submitEditTranslation">
+                    <i class="fas fa-check"></i> Update Translation
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Import Modal -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-upload"></i> Import Translations</h3>
+                <button class="close-modal" id="closeImportModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="importFile"><i class="fas fa-file-import"></i> Select JSON File</label>
+                    <input type="file" id="importFile" accept=".json">
+                </div>
+                <div class="form-group">
+                    <label for="importText"><i class="fas fa-paste"></i> Or Paste JSON Data</label>
+                    <textarea id="importText" placeholder='Paste JSON data in format: [{"runyankore": "...", "english": "...", "category": "..."}, ...]' rows="10"></textarea>
+                </div>
+                <div id="importPreview">
+                    <h4>Preview (first 3 items):</h4>
+                    <div id="previewContent"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelImportModal">Cancel</button>
+                <button class="btn-primary" id="submitImport">
+                    <i class="fas fa-check"></i> Import Translations
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+    
+    <!-- Add the external JavaScript reference -->
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    
+    <!-- Feedback Widget JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRecentFeedback();
+        });
+
+        function loadRecentFeedback() {
+            const widget = document.getElementById('recentFeedbackWidget');
+            if (!widget) return;
+            
+            fetch('/admin/api/feedback?limit=5')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayRecentFeedback(data.feedback);
+                    } else {
+                        widget.innerHTML = '<p class="no-data">Failed to load feedback</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading feedback:', error);
+                    widget.innerHTML = '<p class="no-data">Error loading feedback</p>';
+                });
+        }
+
+        function displayRecentFeedback(feedback) {
+            const widget = document.getElementById('recentFeedbackWidget');
+            
+            if (!feedback || feedback.length === 0) {
+                widget.innerHTML = '<p class="no-data">No feedback yet</p>';
+                return;
+            }
+            
+            let html = '<ul class="recent-list">';
+            feedback.forEach(item => {
+                const date = new Date(item.created_at).toLocaleDateString();
+                const preview = item.message.substring(0, 40) + (item.message.length > 40 ? '...' : '');
+                const unreadClass = !item.is_read ? 'unread' : '';
+                const typeClass = item.feedback_type || 'general';
+                
+                html += `
+                    <li class="recent-feedback-item ${unreadClass}">
+                        <div class="feedback-badge ${typeClass}">${item.feedback_type || 'general'}</div>
+                        <div class="feedback-date">${date}</div>
+                        <div class="feedback-preview">${preview}</div>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            
+            widget.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

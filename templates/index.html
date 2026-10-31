@@ -1,0 +1,946 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <!-- ========== CRITICAL: VIEWPORT FOR PWA ========== -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    
+    <!-- ========== PWA META TAGS ========== -->
+    <meta name="application-name" content="Runyankore Translator">
+    <meta name="description" content="Runyankore-English Smart Translator for preserving culture through modern technology">
+    <meta name="keywords" content="Runyankore, English, Translator, Smart, Translation, Uganda, Language">
+    <meta name="author" content="David Nyanzwengye">
+    
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Runyankore Translator">
+    
+    <!-- Android/Chrome PWA -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <!-- Windows PWA -->
+    <meta name="msapplication-navbutton-color" content="#4f46e5">
+    <meta name="msapplication-TileColor" content="#4f46e5">
+    <meta name="msapplication-TileImage" content="/static/icons/icon-144x144.png">
+    <meta name="msapplication-starturl" content="/">
+    
+    <!-- ========== ICONS ========== -->
+    <link rel="apple-touch-icon" href="/static/icons/icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/icon-16x16.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icons/icon-512x512.png">
+    
+    <!-- ========== MANIFEST ========== -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+    
+    <!-- Fallback emoji favicon (kept as fallback) -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    
+    <!-- ========== TITLE ========== -->
+    <title>Runyankore ↔ English Smart Translator</title>
+    
+    <!-- ========== STYLESHEETS ========== -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.0.0/css/flag-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    
+     <!-- ========== SERVICE WORKER REGISTRATION (MUST BE IN HEAD) ========== -->
+    <script>
+      // Ensure Service Worker registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('✅ ServiceWorker registered:', registration.scope);
+              
+              // Check if update is needed
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('🔄 New content available, refreshing...');
+                    window.location.reload();
+                  }
+                });
+              });
+            })
+            .catch(error => {
+              console.error('❌ ServiceWorker registration failed:', error);
+            });
+        });
+      }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <div class="logo">
+                    <i class="fas fa-language"></i>
+                    <div class="logo-text">
+                        <h1>Runyankore ↔ English Smart Translator</h1>
+                        <p class="tagline">Preserving Culture Through Technology</p>
+                    </div>
+                </div>
+
+             <div class="header-content-wrapper">
+    <div class="header-stats">
+        <div class="stat-item">
+            <i class="fas fa-book"></i>
+            <span id="dictionaryCount">--</span> Words
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-comments"></i>
+            <span id="phraseCount">--</span> Phrases
+        </div>
+        <!-- Version Button -->
+<div class="header-version" onclick="showStatistics()" title="Click to view statistics">
+    <span class="version-text" id="headerVersionText">v4.1</span>
+    <i class="fas fa-chart-bar"></i>
+</div>
+    </div>
+
+    <!-- ADD THIS controls-row DIV WRAPPER -->
+    <div class="controls-row">
+        <a href="/admin" class="admin-link" title="Admin Panel">
+            <i class="fas fa-lock"></i> Admin Panel
+        </a>
+        
+        <button onclick="refreshOfflineDictionary()" title="Refresh offline dictionary" class="refresh-btn">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+        
+        <p class="refresh-note">
+            <i class="fas fa-wifi"></i> Get latest: Connect online → Click Refresh
+        </p>
+    </div>
+    <!-- END controls-row -->
+</div>
+
+           <div class="language-flags">
+    <div class="flag uganda-flag">
+        <span class="fi fi-ug"></span>
+        <span>Runyankore</span>
+    </div>
+    <i class="fas fa-exchange-alt exchange-icon"></i>
+    <div class="flag uk-flag">
+        <span class="fi fi-gb"></span>
+        <span>English</span>
+    </div>
+</div>
+            
+            <!-- Add offline indicator to header -->
+        <div class="offline-indicator" id="offlineStatus">
+    <i class="fas fa-wifi-slash"></i> Offline Mode
+        </div>
+        <!-- Add this inside <header class="header"> -->
+     <div id="pwaNetworkStatus" class="pwa-network-status">
+     <i class="fas fa-wifi-slash"></i>
+     <span>Offline Mode</span>
+   </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Translation Section -->
+            <div class="translation-container">
+                <!-- Left: Runyankore Input -->
+                <div class="translation-card">
+                    <div class="card-header">
+                        <div class="language-label">
+                            <i class="fas fa-edit"></i>
+                            <h2>Runyankore Input</h2>
+                        </div>
+                        <div class="char-count">
+                            <span id="runyankoreCharCount">0</span> characters
+                        </div>
+                    </div>
+                    <div class="textarea-container">
+                        <textarea
+                            id="runyankoreInput"
+                            placeholder="Handiika orunyankore aha... (Type Runyankore here...)"
+                            rows="4"
+                            spellcheck="false"></textarea>
+                        <div class="textarea-actions">
+                            <button class="action-btn" onclick="speakText('runyankoreInput')"
+                          title="Speak Runyankore text">
+                           <i class="fas fa-volume-up"></i>
+                            </button>
+
+                            <button class="action-btn" onclick="clearText('runyankoreInput')"
+                                    title="Clear Runyankore text">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="quick-phrases">
+                        <h4><i class="fas fa-bolt"></i> Quick Phrases:</h4>
+                        <div class="phrase-buttons">
+                            <button class="phrase-btn" onclick="insertPhrase('runyankoreInput', 'Amagara gawe?')">Amagara gawe?</button>
+                            <button class="phrase-btn" onclick="insertPhrase('runyankoreInput', 'Yebare')">Yebare</button>
+                            <button class="phrase-btn" onclick="insertPhrase('runyankoreInput', 'Oraire ota')">Oraire ota</button>
+                            <button class="phrase-btn" onclick="insertPhrase('runyankoreInput', 'Ndi gye')">Ndi gye</button>
+                        </div>
+                    </div>
+                    <button id="translateToEnglishBtn" class="translate-btn">
+                        <i class="fas fa-arrow-right"></i> Translate to English
+                    </button>
+                </div>
+
+                <!-- MIDDLE: Translation Result (MOVED HERE) -->
+                <div class="translation-card result-card">
+                    <div class="card-header">
+                        <div class="language-label">
+                            <i class="fas fa-robot"></i>
+                            <h2>Translation Result</h2>
+                        </div>
+                        <div class="confidence-badge">
+                            <span id="confidenceScore">..</span>% Confidence
+                        </div>
+                    </div>
+                    <div id="translationResult" class="result-display">
+                        <div class="result-placeholder">
+                            <i class="fas fa-language"></i>
+                            <p>Your translation will appear here...</p>
+                        </div>
+                    </div>
+                    <div class="result-actions">
+                        <button class="action-btn" onclick="copyTranslation()"
+                                title="Copy translation">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                        <button class="action-btn" onclick="saveTranslation()"
+                                title="Save translation">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                        <button class="action-btn" onclick="speakTranslation()" title="Speak translation">
+                        <i class="fas fa-volume-up"></i> Speak
+                        </button>
+                        <button class="action-btn clear-result-btn" onclick="clearTranslationResult()"
+                                title="Clear translation">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                    <div class="translation-details">
+                        <h4><i class="fas fa-info-circle"></i> Translation Details:</h4>
+                        <div id="wordDetails" class="word-details">
+                            Translation details will appear here
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: English Input -->
+                <div class="translation-card">
+                    <div class="card-header">
+                        <div class="language-label">
+                            <i class="fas fa-edit"></i>
+                            <h2>English Input</h2>
+                        </div>
+                        <div class="char-count">
+                            <span id="englishCharCount">0</span> characters
+                        </div>
+                    </div>
+                    <div class="textarea-container">
+                        <textarea
+                            id="englishInput"
+                            placeholder="Type English here..."
+                            rows="4"
+                            spellcheck="true"></textarea>
+                        <div class="textarea-actions">
+                            <button class="action-btn" onclick="speakText('englishInput')"
+                                    title="Speak English text">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                            <button class="action-btn" onclick="clearText('englishInput')"
+                                    title="Clear English text">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="quick-phrases">
+                        <h4><i class="fas fa-bolt"></i> Quick Phrases:</h4>
+                        <div class="phrase-buttons">
+                            <button class="phrase-btn" onclick="insertPhrase('englishInput', 'How is your life?')">How is your life?</button>
+                            <button class="phrase-btn" onclick="insertPhrase('englishInput', 'Thank you')">Thank you</button>
+                            <button class="phrase-btn" onclick="insertPhrase('englishInput', 'Good morning')">Good morning</button>
+                            <button class="phrase-btn" onclick="insertPhrase('englishInput', 'I am fine')">I am fine</button>
+                        </div>
+                    </div>
+                    <button id="translateToRunyankoreBtn" class="translate-btn">
+                        <i class="fas fa-arrow-left"></i> Translate to Runyankore
+                    </button>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="features-section">
+                <h2><i class="fas fa-star"></i> Key Features</h2>
+                <div class="features-grid">
+                   <!-- Feature 1: Bi-directional -->
+        <div class="feature">
+            <div class="feature-icon">
+                <i class="fas fa-exchange-alt"></i>
+            </div>
+            <h3>Bi-directional Translation</h3>
+            <p>Translate seamlessly between Runyankore and English in both directions</p>
+        </div>
+
+           <div class="feature">
+         <div class="feature-icon">
+          <i class="fas fa-search"></i>
+          </div>
+           <h3>Search The Dictionary</h3>
+            <p>Quickly look up words and phrases with intelligent search and autocomplete</p>
+             </div>
+                    <div class="feature">
+                        <div class="feature-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h3>Translation History</h3>
+                        <p>Save and revisit your previous translations for easy reference</p>
+                    </div>
+                  <div class="feature">
+            <div class="feature-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <h3>Offline Capability</h3>
+            <p>Access translations even without internet connection using local database</p>
+        </div>
+                </div>
+            </div>
+
+           <!-- Dictionary Section -->
+<div class="dictionary-section">
+    <div class="section-header">
+        <h2><i class="fas fa-book-open"></i> Runyankore Dictionary</h2>
+        <div class="search-box">
+            <div class="autocomplete-wrapper">
+                <input type="text" id="dictionarySearch" placeholder="Search for words or phrases...">
+                <div id="autocompleteResults" class="autocomplete-results"></div>
+            </div>
+            <button onclick="searchDictionary()" title="Search dictionary">
+                <i class="fas fa-search"></i> Search
+            </button>
+            <button onclick="clearDictionarySearch()" title="Clear search" class="clear-search-btn">
+                <i class="fas fa-times"></i> Clear
+            </button>
+        </div>
+    </div>
+    <div id="dictionaryResults" class="dictionary-results">
+        <div class="result-placeholder">
+            <i class="fas fa-search"></i>
+            <p>Search the dictionary to see results...</p>
+        </div>
+    </div>
+</div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section quick-links">
+                    <h3><i class="fas fa-link"></i> Quick Links</h3>
+                    <ul>
+                        <li><a href="#" onclick="showUserGuideModal()"><i class="fas fa-book"></i> <span>User Guide</span></a></li>
+                        <li><a href="#" onclick="showAddTranslationModal()"><i class="fas fa-plus-circle"></i> <span>Add Translation</span></a></li>
+                        <li><a href="#" onclick="viewTranslationHistory()"><i class="fas fa-history"></i> <span>Translation History</span></a></li>
+                        <li><a href="#" onclick="showStatistics()"><i class="fas fa-chart-bar"></i> <span>Statistics</span></a></li>
+                        <li><a href="#" onclick="showAbout()"><i class="fas fa-info-circle"></i> <span>About Translator</span></a></li>
+                        <li><a href="#" onclick="showFeedbackModal()"><i class="fas fa-comment"></i> <span>Send Feedback</span></a></li>
+                        <li><a href="#" onclick="viewUserFeedbackHistory()"><i class="fas fa-history"></i> <span>My Feedback History</span></a></li>
+                        <li><a href="{{ url_for('about_developer') }}"><i class="fas fa-user-tie"></i> <span>About Developer</span></a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3><i class="fas fa-code"></i> Developer</h3>
+                    <p class="compact-info"><strong>David Nyanzwengye</strong></p>
+                    <div class="contact-icons">
+                        <a href="mailto:dnyanzwengye@gmail.com" title="Email">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        <a href="https://github.com/david20-source" target="_blank" rel="noopener noreferrer" title="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://wa.me/256781182967" target="_blank" rel="noopener noreferrer" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="donation-button-container">
+                <button class="donate-main-btn" onclick="showDonationModal()" title="Support this project">
+                    <i class="fas fa-heart"></i> Support This Project
+                </button>
+            </div>
+            
+            <!-- Legal Footer Section -->
+            <div class="footer-legal">
+                <div class="legal-links">
+                    <a href="/terms" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-file-contract"></i> Terms of Service
+                    </a>
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-lock"></i> Privacy Policy
+                    </a>
+                    <a href="/license" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-copyright"></i> Software License
+                    </a>
+                </div>
+                <div class="copyright-notice">
+                    <p>© 2026 Runyankore Smart Translator. All Rights Reserved.</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>Made with <i class="fas fa-heart"></i> for the Runyankore-speaking community</p>
+            </div>
+    
+        </footer>
+    </div>
+
+    <!-- Add Translation Modal -->
+    <div id="addTranslationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus-circle"></i> Add New Translation</h3>
+                <button class="close-modal" onclick="closeModal()" title="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="internet-required-note">
+                    <i class="fas fa-wifi"></i> Internet connection required to submit translations
+                </p>
+                <div class="warning-note">
+                    <h4 class="warning-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Important Notice
+                    </h4>
+                    <p class="warning-text">
+                        <strong>Please ensure your translations are accurate before submitting!</strong>
+                    </p>
+                    <ul class="warning-list">
+                        <li>Only submit translations you're confident are correct</li>
+                        <li>All submissions will be reviewed by language experts</li>
+                        <li>Incorrect translations will be rejected</li>
+                        <li>Help us maintain the quality of the Runyankore dictionary</li>
+                    </ul>
+                    <div class="warning-info">
+                        <i class="fas fa-info-circle"></i>
+                        <span><strong>Note:</strong> You should be proficient in both Runyankore and English to submit translations</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="newRunyankore"><i class="fas fa-pen-fancy"></i> Runyankore Word/Phrase</label>
+                    <input type="text" id="newRunyankore" placeholder="Enter Runyankore text...">
+                    <small class="form-help">Must be in correct Runyankore spelling</small>
+                </div>
+                <div class="form-group">
+                    <label for="newEnglish"><i class="fas fa-pen-alt"></i> English Translation</label>
+                    <input type="text" id="newEnglish" placeholder="Enter English translation...">
+                    <small class="form-help">Accurate English equivalent</small>
+                </div>
+                <div class="form-group">
+                    <label for="translationType"><i class="fas fa-tag"></i> Type</label>
+                    <select id="translationType">
+                        <option value="word">Single Word</option>
+                        <option value="phrase">Phrase</option>   
+                    </select>
+                </div>
+                
+                <div class="form-group confirmation-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="translationConfirmation">
+                        <span class="checkbox-text">
+                            I confirm that this translation is accurate and I understand it will be reviewed by language experts
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" id="submitTranslationBtn" onclick="submitNewTranslation()" disabled>
+                    <i class="fas fa-check"></i> Submit Translation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-history"></i> Translation History</h3>
+                <button class="close-modal" onclick="closeModal()" title="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="historyList" class="history-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Close</button>
+                <button class="btn-danger" onclick="clearHistory()">
+                    <i class="fas fa-trash"></i> Clear History
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">
+        <span id="notificationMessage"></span>
+    </div>
+
+    <div id="pwaInstallContainer" class="pwa-install-container">
+        <button id="installAppBtn" class="floating-install-btn">
+            <i class="fas fa-download"></i>
+            <span class="btn-text">Install App</span>
+        </button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/offline-database-simple.js') }}?v=1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js" defer></script>
+    <script src="{{ url_for('static', filename='js/pwa-install.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+
+    <!-- Statistics Modal -->
+    <div id="statisticsModal" class="modal statistics-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-chart-bar"></i> Translator Statistics</h3>
+                <button class="close-modal" onclick="closeStatisticsModal()" title="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="statisticsContent">
+                    <div class="stats-loading">
+                        <div class="spinner"></div>
+                        <p>Loading statistics...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeStatisticsModal()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Translator Modal -->
+    <div id="aboutTranslatorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-info-circle"></i> About Translator</h3>
+                <button class="close-modal" onclick="closeAboutModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="about-content">
+                    <h4>Mission Statement:</h4>
+                    <p>This advanced translation platform is dedicated to the preservation and revitalization of the Runyankore language. By leveraging modern artificial intelligence, we bridge cultural heritage with cutting-edge technology to make language learning and translation accessible to all.</p>
+                    <h4>Core Features:</h4>
+                    <ul>
+                        <li><strong>Smart Bidirectional Translation</strong></li>
+                        <li><strong>Expansive Curated Dictionary</strong> (with future community contribution)</li>
+                        <li><strong>Translation History & Learning Tools</strong></li>
+                        <li><strong>Progressive Web App (PWA) with offline capabilities</strong> for Mobile & Desktop</li>
+                    </ul>
+                    <p class="note"><i class="fas fa-external-link-alt"></i> For developer information, please visit the <a href="{{ url_for('about_developer') }}">About Developer</a> page.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeAboutModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Guide Modal -->
+    <div id="userGuideModal" class="modal user-guide-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-book"></i> User Guide & Instructions</h3>
+                <button class="close-modal" onclick="closeUserGuideModal()" title="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="guide-content">
+                    <!-- Table of Contents -->
+                    <div class="table-of-contents">
+                        <h4><i class="fas fa-list"></i> Quick Navigation</h4>
+                        <div class="toc-links">
+                            <a href="#section-basics">Basic Translation</a>
+                            <a href="#section-dictionary">Dictionary Search</a>
+                            <a href="#section-offline">Offline Usage</a>
+                            <a href="#section-features">Additional Features</a>
+                            <a href="#section-troubleshooting">Troubleshooting</a>
+                            <a href="#section-pwa">PWA Installation</a>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-section" id="section-basics">
+                        <h4><i class="fas fa-exchange-alt"></i> Basic Translation Guide</h4>
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Bi-directional Translation</h5>
+                                <p>Translate between Runyankore and English in both directions:</p>
+                                <ul>
+                                    <li><strong>Runyankore → English:</strong> Type in the left box and click <i class="fas fa-arrow-right"></i> "Translate to English"</li>
+                                    <li><strong>English → Runyankore:</strong> Type in the right box and click <i class="fas fa-arrow-left"></i> "Translate to Runyankore"</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h5>Quick Phrases</h5>
+                                <p>Use the pre-loaded quick phrases to get started quickly. Click any phrase button to automatically insert it into the translation box.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-section" id="section-dictionary">
+                        <h4><i class="fas fa-book-open"></i> Dictionary Search Features</h4>
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Intelligent Search</h5>
+                                <p>Use the dictionary search box to look up words and phrases:</p>
+                                <ul>
+                                    <li><strong>Autocomplete:</strong> Start typing and get instant suggestions</li>
+                                    <li><strong>Smart Matching:</strong> Search works with partial words and phrases</li>
+                                    <li><strong>Both Languages:</strong> Search in Runyankore or English</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-section" id="section-offline">
+                        <h4><i class="fas fa-wifi-slash"></i> Offline & Online Usage</h4>
+                        <div class="feature-highlight offline-feature">
+                            <i class="fas fa-mobile-alt"></i>
+                            <div>
+                                <h5>Offline Mode</h5>
+                                <p>The app works <strong>completely offline</strong> once loaded!</p>
+                                <ul>
+                                    <li>Initial load requires internet connection</li>
+                                    <li>After first load, works without internet</li>
+                                    <li>Uses local dictionary with 500+ translations</li>
+                                    <li>Translation history saved locally</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-section" id="section-features">
+                        <h4><i class="fas fa-star"></i> Additional Features</h4>
+                        <div class="features-grid">
+                            <div class="feature-card">
+                                <i class="fas fa-history"></i>
+                                <h5>Translation History</h5>
+                                <p>All translations are saved locally. Access them anytime from Quick Links.</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fas fa-volume-up"></i>
+                                <h5>Text-to-Speech</h5>
+                                <p>Click the speaker icon to hear English text pronunciation.</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fas fa-copy"></i>
+                                <h5>Copy Translation</h5>
+                                <p>One-click copy of translations to clipboard.</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fas fa-plus-circle"></i>
+                                <h5>Contribute</h5>
+                                <p>Submit new translations (requires internet & confirmation).</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-section troubleshooting-section" id="section-troubleshooting">
+                        <h4><i class="fas fa-wrench"></i> Troubleshooting & Updates</h4>
+                        <div class="warning-box">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                <h5>Important Update Instructions</h5>
+                                <p>If the app fails to update automatically, follow these steps:</p>
+                                <ol>
+                                    <li><strong>Visit your web browser settings</strong></li>
+                                    <li><strong>Delete all browser history and cache</strong> related to this app</li>
+                                    <li><strong>Clear cookies and site data</strong> for this domain</li>
+                                    <li><strong>Close all browser tabs/windows</strong> of the app</li>
+                                    <li><strong>Reopen the app</strong> in your browser</li>
+                                    <li><strong>Allow 10-20 seconds</strong> for automatic updates to load</li>
+                                </ol>
+                                <p class="note">This forces the browser to download fresh files and ensures you get the latest version.</p>
+                            </div>
+                        </div>
+                        <div class="common-issues">
+                            <h5><i class="fas fa-question-circle"></i> Common Issues</h5>
+                            <div class="issue">
+                                <strong>Problem:</strong> App shows old version
+                                <br><strong>Solution:</strong> Follow the update instructions above
+                            </div>
+                            <div class="issue">
+                                <strong>Problem:</strong> Offline dictionary not loading
+                                <br><strong>Solution:</strong> Connect to internet → Click "Refresh" button
+                            </div>
+                            <div class="issue">
+                                <strong>Problem:</strong> Translation not found
+                                <br><strong>Solution:</strong> Try different phrasing or use online mode for Smart translation
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="guide-section" id="section-pwa">
+                        <h4><i class="fas fa-mobile-alt"></i> Install as App (PWA)</h4>
+                        <div class="pwa-instructions">
+                            <div class="instruction">
+                                <i class="fab fa-chrome"></i>
+                                <div>
+                                    <h5>Chrome/Edge/Android</h5>
+                                    <p>Click the "Install App" button (floating button) or use browser menu → "Install App"</p>
+                                </div>
+                            </div>
+                            <div class="instruction">
+                                <i class="fab fa-safari"></i>
+                                <div>
+                                    <h5>Safari (iPhone/iPad)</h5>
+                                    <p>Tap Share button → Scroll down → "Add to Home Screen"</p>
+                                </div>
+                            </div>
+                            <div class="benefits">
+                                <h5><i class="fas fa-check-circle"></i> PWA Benefits:</h5>
+                                <ul>
+                                    <li>App icon on home screen</li>
+                                    <li>Works offline like native app</li>
+                                    <li>Faster loading</li>
+                                    <li>Better sleep management (prevents screen lock)</li>
+                                    <li>No app store downloads required</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Tips -->
+                    <div class="quick-tips">
+                        <h4><i class="fas fa-lightbulb"></i> Quick Tips</h4>
+                        <div class="tips-grid">
+                            <div class="tip">
+                                <i class="fas fa-sync-alt"></i>
+                                <p>Refresh statistics when online to get latest word counts</p>
+                            </div>
+                            <div class="tip">
+                                <i class="fas fa-save"></i>
+                                <p>Save important translations to history for quick access</p>
+                            </div>
+                            <div class="tip">
+                                <i class="fas fa-search"></i>
+                                <p>Use autocomplete for faster dictionary searches</p>
+                            </div>
+                            <div class="tip">
+                                <i class="fas fa-download"></i>
+                                <p>Install as PWA for best mobile experience</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Offline Features Guide -->
+                    <div class="offline-guide">
+                        <h4><i class="fas fa-database"></i> Offline Capabilities</h4>
+                        <div class="offline-grid">
+                            <div class="offline-card">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Full dictionary search</span>
+                            </div>
+                            <div class="offline-card">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Runyankore ↔ English translation</span>
+                            </div>
+                            <div class="offline-card">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Translation history</span>
+                            </div>
+                            <div class="offline-card">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Quick phrases</span>
+                            </div>
+                            <div class="offline-card">
+                                <i class="fas fa-times-circle"></i>
+                                <span>Smart Matching translation (needs internet)</span>
+                            </div>
+                            <div class="offline-card">
+                                <i class="fas fa-times-circle"></i>
+                                <span>Submit new translations (needs internet)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeUserGuideModal()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <button class="btn-primary" onclick="printGuide()">
+                    <i class="fas fa-print"></i> Print Guide
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Modal (formerly Donation Modal) -->
+    <div id="donationModal" class="modal">
+        <div class="modal-content support-modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-heart"></i> Support This Project</h3>
+                <button class="close-modal" onclick="closeDonationModal()" title="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="support-message">
+                    <div class="support-icon">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <p class="support-intro">
+                        This project was created to promote and preserve the Runyankore language through technology.
+                    </p>
+                    <p class="support-text">
+                        If you would like to support future improvements, you can contact the developer below:
+                    </p>
+                    
+                    <div class="support-contact-buttons">
+                        <a href="https://wa.me/256781182967" target="_blank" rel="noopener noreferrer" class="support-whatsapp-btn">
+                            <i class="fab fa-whatsapp"></i>
+                            WhatsApp
+                        </a>
+                        <a href="mailto:dnyanzwengye@gmail.com" class="support-email-btn">
+                            <i class="fas fa-envelope"></i>
+                            Email Developer
+                        </a>
+                    </div>
+                    
+                    <p class="support-note">
+                        <i class="fas fa-info-circle"></i> 
+                        When contacting, please mention "Runyankore Translator Support" in your message.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeDonationModal()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-comment"></i> Send Feedback</h3>
+                <button class="close-modal" onclick="closeFeedbackModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="feedback-note">Help us improve the translator! Your feedback is valuable.</p>
+                
+                <div class="form-group">
+                    <label for="feedbackName"><i class="fas fa-user"></i> Your Name (optional)</label>
+                    <input type="text" id="feedbackName" placeholder="Enter your name...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedbackEmail"><i class="fas fa-envelope"></i> Your Email (optional)</label>
+                    <input type="email" id="feedbackEmail" placeholder="Enter your email for reply...">
+                    <small>We can also use this to reply to your feedback</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedbackType"><i class="fas fa-tag"></i> Feedback Type</label>
+                    <select id="feedbackType">
+                        <option value="general">General Feedback</option>
+                        <option value="bug">Bug Report</option>
+                        <option value="suggestion">Suggestion</option>
+                        <option value="praise">Praise</option>
+                        <option value="question">Question</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedbackMessage"><i class="fas fa-pen"></i> Your Message <span class="required-indicator">*</span></label>
+                    <textarea id="feedbackMessage" rows="5" placeholder="Tell us what you think..."></textarea>
+                </div>
+                
+                <div id="feedbackStatus"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-link" onclick="viewUserFeedbackHistory()">
+                    <i class="fas fa-history"></i> View My History
+                </button>
+                <div>
+                    <button class="btn-secondary" onclick="closeFeedbackModal()">Cancel</button>
+                    <button class="btn-primary" onclick="submitFeedback()" id="submitFeedbackBtn">
+                        <i class="fas fa-paper-plane"></i> Send Feedback
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Feedback History Modal -->
+    <div id="userFeedbackHistoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-history"></i> Your Feedback History</h3>
+                <button class="close-modal" onclick="closeUserFeedbackHistory()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="userFeedbackList"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeUserFeedbackHistory()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consent Banner -->
+    <div id="consentBanner" class="consent-banner">
+        <div class="consent-content">
+            <div class="consent-text">
+                <i class="fas fa-shield-alt"></i>
+                <p>By using this translator, you agree to our 
+                    <a href="/terms" target="_blank">Terms of Service</a> and 
+                    <a href="/privacy" target="_blank">Privacy Policy</a>.
+                </p>
+            </div>
+            <button onclick="acceptTerms()" class="consent-btn">Accept</button>
+        </div>
+    </div>
+
+    <script>
+    function acceptTerms() {
+        localStorage.setItem('termsAccepted', 'true');
+        document.getElementById('consentBanner').style.display = 'none';
+    }
+
+    if (!localStorage.getItem('termsAccepted')) {
+        setTimeout(function() {
+            const banner = document.getElementById('consentBanner');
+            if (banner) banner.style.display = 'flex';
+        }, 2000);
+    }
+    
+    // Support modal functions
+    function showDonationModal() {
+        const modal = document.getElementById('donationModal');
+        if (modal) modal.style.display = 'flex';
+    }
+    
+    function closeDonationModal() {
+        const modal = document.getElementById('donationModal');
+        if (modal) modal.style.display = 'none';
+    }
+    </script>
+</body>
+</html>

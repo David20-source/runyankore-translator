@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Searches - Runyankore Translator Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/searches.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>Admin Panel</h3>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                        <i class="fas fa-dashboard"></i> Dashboard
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_translations_page') }}">
+                        <i class="fas fa-language"></i> Translations
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_review') }}">
+                        <i class="fas fa-check-circle"></i> Review
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_trash') }}">
+                        <i class="fas fa-trash"></i> Trash
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_synonyms') }}">
+                        <i class="fas fa-link"></i> Synonyms
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('admin_searches') }}">
+                        <i class="fas fa-search"></i> User Searches
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_logout') }}">
+                        <i class="fas fa-sign-out"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="searches-container">
+                <!-- Header -->
+                <div class="searches-header">
+                    <h1><i class="fas fa-search"></i> User Search Requests</h1>
+                    <div class="user-info">
+                        <i class="fas fa-user"></i> {{ username }}
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-search"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalSearches">0</div>
+                            <div class="stat-label">Total Searches</div>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="successful">0</div>
+                            <div class="stat-label">Successful</div>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="failed">0</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="needsReview">0</div>
+                            <div class="stat-label">Needs Review</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Missing Words -->
+                <div class="missing-words-section">
+                    <h3><i class="fas fa-question-circle"></i> Most Requested Missing Words</h3>
+                    <div class="missing-words-grid" id="missingWords">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-section">
+                    <div class="filter-group">
+                        <input type="text" id="searchFilter" placeholder="Search by text..." class="filter-input">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="directionFilter" class="filter-label">Direction:</label>
+                        <select id="directionFilter" class="filter-select">
+                            <option value="">All Directions</option>
+                            <option value="run_to_en">Runyankore → English</option>
+                            <option value="en_to_run">English → Runyankore</option>
+                            <option value="dictionary_search">Dictionary Search</option>
+                        </select>
+                    </div>
+
+                    <!-- NEW: Status Filter -->
+                    <div class="filter-group">
+                        <label for="statusFilter" class="filter-label">Status:</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="all">All Searches</option>
+                            <option value="pending">Needs Review (Failed Only)</option>
+                            <option value="reviewed">Reviewed Only</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <button id="refreshBtn" class="btn-secondary"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Searches Table -->
+                <div class="searches-table-container">
+                    <table class="searches-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Search Text</th>
+                                <th>Direction</th>
+                                <th>Translation</th>
+                                <th>Confidence</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="searchesTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center">Loading searches...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Translation Modal - FIXED: Removed readonly to allow editing -->
+    <div id="addTranslationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Translation from Search</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addTranslationForm">
+                    <input type="hidden" id="searchId" name="searchId">
+                    <div class="form-group">
+                        <label for="runyankore">Runyankore:</label>
+                        <input type="text" id="runyankore" class="form-control" placeholder="Enter Runyankore word...">
+                    </div>
+                    <div class="form-group">
+                        <label for="english">English:</label>
+                        <input type="text" id="english" class="form-control" placeholder="Enter English translation...">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category:</label>
+                        <select id="category" class="form-control">
+                            <option value="general">General</option>
+                            <option value="greetings">Greetings</option>
+                            <option value="food">Food</option>
+                            <option value="family">Family</option>
+                            <option value="verbs">Verbs</option>
+                            <option value="numbers">Numbers</option>
+                            <option value="time">Time</option>
+                            <option value="places">Places</option>
+                            <option value="animals">Animals</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="submitTranslation()"><i class="fas fa-save"></i> Add Translation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Modal -->
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Review Notes</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="reviewNotes" class="form-control" rows="4" placeholder="Enter notes about this search..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeNotesModal()">Cancel</button>
+                <button class="btn-primary" onclick="submitReview()"><i class="fas fa-check"></i> Mark Reviewed</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSearchId = null;
+        let currentSearchData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadSearches();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+    document.getElementById('searchFilter').addEventListener('input', debounce(loadSearches, 500));
+    document.getElementById('directionFilter').addEventListener('change', loadSearches);
+    document.getElementById('statusFilter').addEventListener('change', loadSearches);
+    // REMOVED the line with 'includeReviewed' since it doesn't exist
+    
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        // Reset filters to default
+        document.getElementById('searchFilter').value = '';
+        document.getElementById('directionFilter').value = '';
+        document.getElementById('statusFilter').value = 'all';
+        
+        // Then reload
+        loadStats();
+        loadSearches();
+    });
+
+    // Modal close buttons
+    document.querySelectorAll('.close').forEach(btn => {
+        btn.addEventListener('click', function() {
+            closeModal();
+            closeNotesModal();
+        });
+    });
+
+    // Click outside modal to close
+    window.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal')) {
+            closeModal();
+            closeNotesModal();
+        }
+    });
+}
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function loadStats() {
+            fetch('/admin/api/searches/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateStats(data.stats);
+                    }
+                })
+                .catch(error => console.error('Error loading stats:', error));
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalSearches').textContent = stats.total_searches || 0;
+            document.getElementById('successful').textContent = stats.successful || 0;
+            document.getElementById('failed').textContent = stats.failed || 0;
+            document.getElementById('needsReview').textContent = stats.needs_review || 0;
+
+            // Update missing words
+            const missingContainer = document.getElementById('missingWords');
+            if (stats.top_missing && stats.top_missing.length > 0) {
+                let html = '';
+                stats.top_missing.forEach(item => {
+                    html += `
+                        <div class="missing-word-card" onclick="quickAdd('${item.search_text}')">
+                            <div class="missing-word">${item.search_text}</div>
+                            <div class="missing-count">${item.count} searches</div>
+                            <button class="btn-add-small"><i class="fas fa-plus"></i> Add</button>
+                        </div>
+                    `;
+                });
+                missingContainer.innerHTML = html;
+            } else {
+                missingContainer.innerHTML = '<div class="no-data">No missing words found</div>';
+            }
+        }
+
+    function loadSearches() {
+    const searchTerm = document.getElementById('searchFilter').value;
+    const direction = document.getElementById('directionFilter').value;
+    const status = document.getElementById('statusFilter').value;
+
+    let url = '/admin/api/searches?limit=100';
+    
+    // Handle status filter
+    if (status === 'pending') {
+        url += '&include_reviewed=false';  // Only pending (needs_review = true)
+    } else if (status === 'reviewed') {
+        url += '&include_reviewed=true&reviewed_only=true';  // Only reviewed
+    } else {
+        url += '&include_reviewed=true';  // All searches - THIS IS THE KEY!
+    }
+    
+    if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+    if (direction) url += `&direction=${direction}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displaySearches(data.searches);
+            }
+        })
+        .catch(error => console.error('Error loading searches:', error));
+}
+
+        function displaySearches(searches) {
+            const tbody = document.getElementById('searchesTableBody');
+            
+            if (!searches || searches.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No searches found</td></tr>';
+                return;
+            }
+
+            let html = '';
+            searches.forEach(search => {
+                const time = new Date(search.timestamp).toLocaleString();
+                let directionIcon = '🔍';
+                let directionText = search.search_direction;
+                
+                if (search.search_direction === 'run_to_en') {
+                    directionIcon = '→';
+                    directionText = 'Runyankore → English';
+                } else if (search.search_direction === 'en_to_run') {
+                    directionIcon = '←';
+                    directionText = 'English → Runyankore';
+                } else if (search.search_direction === 'dictionary_search') {
+                    directionIcon = '📚';
+                    directionText = 'Dictionary Search';
+                }
+                
+                const statusClass = search.needs_review ? 'status-pending' : 'status-reviewed';
+                const statusText = search.needs_review ? 'Pending' : 'Reviewed';
+                
+                html += `
+                    <tr class="${search.needs_review ? 'needs-review' : ''}">
+                        <td>${time}</td>
+                        <td><strong>${search.search_text}</strong></td>
+                        <td>${directionIcon} ${directionText}</td>
+                        <td>${search.translated_text || '<span class="no-translation">No translation</span>'}</td>
+                        <td>${search.confidence ? (search.confidence * 100).toFixed(0) + '%' : '-'}</td>
+                        <td>${search.source || '-'}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                       <td class="actions">
+                         <!-- ALWAYS show Add button for ALL searches -->
+                           <button class="btn-action btn-add" onclick="openAddModal(${search.id}, '${search.search_text}', '${search.search_direction}')" title="Add translation">
+                          <i class="fas fa-plus"></i>
+                          </button>
+    
+                           ${search.needs_review ? `
+                        <button class="btn-action btn-review" onclick="openNotesModal(${search.id})" title="Mark reviewed">
+                         <i class="fas fa-check"></i>
+                         </button>
+                      ` : ''}
+    
+                       <button class="btn-action btn-delete" onclick="deleteSearch(${search.id})" title="Delete">
+                        <i class="fas fa-trash"></i>
+                       </button>
+                       </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function openAddModal(searchId, text, direction) {
+            currentSearchId = searchId;
+            document.getElementById('searchId').value = searchId;
+            
+            // Pre-fill the appropriate field based on direction
+            if (direction === 'run_to_en') {
+                document.getElementById('runyankore').value = text;
+                document.getElementById('english').value = '';
+            } else if (direction === 'en_to_run') {
+                document.getElementById('runyankore').value = '';
+                document.getElementById('english').value = text;
+            } else {
+                // Dictionary search - leave both empty for manual entry
+                document.getElementById('runyankore').value = '';
+                document.getElementById('english').value = '';
+            }
+            
+            document.getElementById('addTranslationModal').style.display = 'block';
+            
+            // Focus on the empty field
+            if (direction === 'run_to_en') {
+                document.getElementById('english').focus();
+            } else {
+                document.getElementById('runyankore').focus();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('addTranslationModal').style.display = 'none';
+        }
+
+        function submitTranslation() {
+            const runyankore = document.getElementById('runyankore').value.trim();
+            const english = document.getElementById('english').value.trim();
+            const category = document.getElementById('category').value;
+
+            if (!runyankore || !english) {
+                alert('Both fields are required');
+                return;
+            }
+
+            fetch('/api/translations/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ runyankore, english, category })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Translation added successfully!');
+                    
+                    // Mark the search as reviewed
+                    fetch(`/admin/api/searches/mark-reviewed/${currentSearchId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ notes: 'Added as translation' })
+                    })
+                    .then(() => {
+                        closeModal();
+                        loadStats();
+                        loadSearches();
+                    });
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding translation');
+            });
+        }
+
+        function openNotesModal(searchId) {
+            currentSearchId = searchId;
+            document.getElementById('notesModal').style.display = 'block';
+        }
+
+        function closeNotesModal() {
+            document.getElementById('notesModal').style.display = 'none';
+            document.getElementById('reviewNotes').value = '';
+        }
+
+        function submitReview() {
+            const notes = document.getElementById('reviewNotes').value;
+
+            fetch(`/admin/api/searches/mark-reviewed/${currentSearchId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes: notes })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeNotesModal();
+                    loadStats();
+                    loadSearches();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error marking as reviewed');
+            });
+        }
+
+        function deleteSearch(searchId) {
+            if (!confirm('Are you sure you want to delete this search record?')) {
+                return;
+            }
+
+            fetch(`/admin/api/searches/delete/${searchId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadStats();
+                    loadSearches();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting search');
+            });
+        }
+
+        function quickAdd(word) {
+            // Quick add from missing words - assumes English to Runyankore
+            document.getElementById('runyankore').value = '';
+            document.getElementById('english').value = word;
+            document.getElementById('category').value = 'general';
+            document.getElementById('addTranslationModal').style.display = 'block';
+            currentSearchId = null;
+            document.getElementById('searchId').value = '';
+            
+            // Focus on Runyankore field for manual entry
+            document.getElementById('runyankore').focus();
+        }
+    </script>
+</body>
+</html>

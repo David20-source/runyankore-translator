@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Runyankore Smart Translator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Admin login specific styles */
+        .admin-login-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 900px;
+            overflow: hidden;
+            display: flex;
+        }
+        
+        .login-header {
+            padding: 40px;
+            background: #f8fafc;
+            border-right: 1px solid #e5e7eb;
+            width: 50%;
+        }
+        
+        .login-form {
+            padding: 40px;
+            width: 50%;
+        }
+        
+        .login-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .login-header .logo i {
+            font-size: 3rem;
+            color: #4f46e5;
+        }
+        
+        .login-header h1 {
+            font-size: 1.8rem;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .login-header h2 {
+            font-size: 1.5rem;
+            color: #4f46e5;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4b5563;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .login-footer {
+            margin-top: 25px;
+            text-align: center;
+            color: #6b7280;
+        }
+        
+        .login-footer p {
+            margin-bottom: 15px;
+        }
+        
+        .back-to-site {
+            color: #4f46e5;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .back-to-site:hover {
+            color: #3730a3;
+        }
+        
+        .security-note {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0369a1;
+        }
+        
+        /* Sidebar for login page */
+        .login-sidebar {
+            background: #1f2937;
+            color: white;
+            padding: 40px;
+            width: 50%;
+        }
+        
+        .sidebar-content h3 {
+            color: white;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .features-list {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+        
+        .features-list li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #d1d5db;
+        }
+        
+        .features-list li i {
+            color: #60a5fa;
+        }
+        
+        .system-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .system-info h4 {
+            color: white;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .system-info p {
+            color: #d1d5db;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .login-card {
+                flex-direction: column;
+            }
+            
+            .login-header,
+            .login-form,
+            .login-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            
+            .login-sidebar {
+                border-bottom: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">
+                    <i class="fas fa-language"></i>
+                    <h1>Runyankore Smart Translator</h1>
+                </div>
+                <h2><i class="fas fa-lock"></i> Admin Login</h2>
+                <p class="subtitle">Access the translation management panel</p>
+                
+                {% if error %}
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <form method="POST" action="{{ url_for('handle_admin_login') }}" class="login-form">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i> Username
+                    </label>
+                    <input type="text" id="username" name="username" 
+                           placeholder="Enter admin username" required 
+                           value="{{ request.form.username if request.form }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-key"></i> Password
+                    </label>
+                    <input type="password" id="password" name="password" 
+                           placeholder="Enter password" required>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn-login">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </div>
+                
+                <div class="login-footer">
+                    <a href="/" class="back-to-site">
+                        <i class="fas fa-arrow-left"></i> Back to Translator
+                    </a>
+                </div>
+                
+                <div class="security-note">
+                    <i class="fas fa-shield-alt"></i>
+                    <p>This area is restricted to authorized administrators only.</p>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Focus on username field on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('username').focus();
+        });
+    </script>
+</body>
+</html>

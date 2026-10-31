@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About the Developer | Runyankore Translator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about-developer.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container about-developer-container">
+        <!-- Back to Home Button -->
+        <div class="back-button-container">
+            <a href="/" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Translator
+            </a>
+        </div>
+
+        <!-- Developer Profile -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <div class="avatar-circle">
+                        <img src="{{ url_for('static', filename='images/david.jpg') }}"
+                             alt="David Nyanzwengye"
+                             class="avatar-photo">
+                    </div>
+                    <h1>David Nyanzwengye</h1>
+                    <p class="title">Software Developer & Language Preservation Advocate</p>
+                </div>
+            </div>
+
+            <div class="profile-content">
+                <div class="profile-section">
+                    <h2><i class="fas fa-graduation-cap"></i> Education</h2>
+                    <div class="education-item">
+                        <h3>Bachelor of Information Technology</h3>
+                        <p class="institution">Muteesa 1 Royal University, Uganda</p>
+                        <p class="duration">2023 - 2026</p>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h2><i class="fas fa-bullseye"></i> Mission</h2>
+                    <p class="mission-statement">
+                        As a Ugandan developer, I'm passionate about using technology to preserve
+                        and promote African cultural heritage. This Runyankore Translator is more
+                        than just an app—it's a tool for cultural preservation, education, and
+                        connecting generations through language.
+                    </p>
+                </div>
+
+                <div class="profile-section">
+                    <h2><i class="fas fa-code"></i> Technical Skills</h2>
+                    <div class="skills-grid">
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">Flask</span>
+                        <span class="skill-tag">JavaScript</span>
+                        <span class="skill-tag">HTML/CSS</span>
+                        <span class="skill-tag">SQLite</span>
+                        <span class="skill-tag">PWA Development</span>
+                        <span class="skill-tag">AI/ML Integration</span>
+                        <span class="skill-tag">Responsive Design</span>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h2><i class="fas fa-envelope"></i> Contact & Professional Links</h2>
+                    <div class="contact-grid">
+                        <a href="mailto:dnyanzwengye@gmail.com" class="contact-card">
+                            <i class="fas fa-envelope"></i>
+                            <span>Email</span>
+                            <small>dnyanzwengye@gmail.com</small>
+                        </a>
+
+                        <a href="https://github.com/david20-source" target="_blank" rel="noopener noreferrer" class="contact-card">
+                            <i class="fab fa-github"></i>
+                            <span>GitHub</span>
+                            <small>@david20-source</small>
+                        </a>
+
+                        <a href="https://linkedin.com/in/david-nyanzwengye-556698360" target="_blank" rel="noopener noreferrer" class="contact-card">
+                            <i class="fab fa-linkedin"></i>
+                            <span>LinkedIn</span>
+                            <small>Professional Profile</small>
+                        </a>
+
+                        <a href="https://wa.me/256781182967" target="_blank" rel="noopener noreferrer" class="contact-card">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="profile-section">
+                    <h2><i class="fas fa-project-diagram"></i> Other Projects</h2>
+                    <div class="projects-grid">
+                        
+        <!-- Kampala Smart Traffic Alert System -->
+        <div class="project-card">
+            <div class="project-header">
+                <i class="fas fa-traffic-light"></i>
+                <h3>Kampala Smart Traffic Alert System</h3>
+            </div>
+            <div class="project-description">
+                <p>
+                    AI-driven traffic prediction and alert platform for the
+                    Kampala Metropolitan Area, forecasting congestion patterns
+                    to support improved urban mobility.
+                </p>
+            </div>
+            <div class="project-tech">
+                <span class="tech-tag">React</span>
+                <span class="tech-tag">Supabase</span>
+                <span class="tech-tag">Railway</span>
+                <span class="tech-tag">APIs</span>
+            </div>
+            <a
+                href="https://stas-app.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-link"
+            >
+                View live project ↗
+            </a>
+        </div>
+
+        <!-- School Management Portal -->
+        <div class="project-card">
+            <div class="project-header">
+                <i class="fas fa-school"></i>
+                <h3>School Management Portal</h3>
+            </div>
+            <div class="project-description">
+                <p>
+                    A role-based school platform for parents, students, teachers
+                    and administrators, with real-time data updates and secure
+                    authentication.
+                </p>
+            </div>
+            <div class="project-tech">
+                <span class="tech-tag">JavaScript</span>
+                <span class="tech-tag">Firebase</span>
+                <span class="tech-tag">Firestore</span>
+                <span class="tech-tag">Auth</span>
+            </div>
+            <a
+                href="https://green-valley-schools.web.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-link"
+            >
+                View live project ↗
+            </a>
+        </div>
+
+        <!-- Kisakye Muto Home Charity -->
+        <div class="project-card">
+            <div class="project-header">
+                <i class="fas fa-hand-holding-heart"></i>
+                <h3>Kisakye Muto Home Charity</h3>
+            </div>
+            <div class="project-description">
+                <p>
+                    A responsive website communicating a charity organisation's
+                    mission and gathering support for its work in Mpigi District.
+                </p>
+            </div>
+            <div class="project-tech">
+                <span class="tech-tag">HTML</span>
+                <span class="tech-tag">CSS</span>
+                <span class="tech-tag">JavaScript</span>
+            </div>
+            <a
+                href="https://kisakyemutohomecharity.netlify.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-link"
+            >
+                View live project ↗
+            </a>
+        </div>
+
+    </div>
+</div>
+
+        <!-- Call to Action -->
+        <div class="cta-section">
+            <h2>Let's Connect!</h2>
+            <p>Interested in collaboration, feedback, or just want to chat about technology and cultural preservation?</p>
+            <a href="mailto:dnyanzwengye@gmail.com" class="cta-button">
+                <i class="fas fa-paper-plane"></i> Send Message
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer about-developer-footer">
+        <div class="footer-bottom">
+            <p>© 2026 David Nyanzwengye. All rights reserved.</p>
+            <p class="made-with-love">Made with <i class="fas fa-heart"></i> in Uganda</p>
+        </div>
+    </footer>
+</body>
+</html>

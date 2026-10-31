@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="index, follow">
+    <title>{% block title %}Runyankore Translator{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/legal.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="legal-page-container">
+        <div class="legal-header">
+            <a href="/" class="legal-home-link">
+                <i class="fas fa-arrow-left"></i> Back to Translator
+            </a>
+            <div class="legal-title">
+                <i class="fas {% block icon %}fa-file-contract{% endblock %}"></i>
+                <h1>{% block page_title %}Legal Document{% endblock %}</h1>
+            </div>
+            <p class="legal-last-updated">Last Updated: March 21, 2026</p>
+        </div>
+        
+        <div class="legal-content">
+            {% block content %}
+            {% endblock %}
+        </div>
+        
+        <div class="legal-footer">
+            <div class="legal-footer-links">
+                <a href="/terms">Terms of Service</a>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/license">License</a>
+                <a href="/about-developer">About Developer</a>
+            </div>
+            <div class="legal-copyright">
+                <p>© 2026 David Nyanzwengye. All Rights Reserved.</p>
+                <p class="legal-disclaimer">Runyankore Smart Translator — Preserving Culture Through Technology</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Add these cache control meta tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Review Translations - Runyankore Translator Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_review.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Admin Header -->
+        <div class="admin-header">
+            <div class="admin-brand">
+                <h1><i class="fas fa-language"></i> Runyankore Translator Admin</h1>
+                <p>Translation Review Panel</p>
+            </div>
+            <div class="admin-user">
+                <span><i class="fas fa-user-shield"></i> {{ username }}</span>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-danger">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="admin-main">
+            <div class="review-header">
+                <div class="review-title">
+                    <h2><i class="fas fa-clipboard-check"></i> Pending Translations Review</h2>
+                </div>
+                <div class="review-controls">
+                    <div class="stats-badge" id="pendingCount">
+                        <i class="fas fa-clock"></i>
+                        <span>Loading...</span>
+                    </div>
+                    <button id="approveAllButton" class="btn btn-success btn-approve-all" title="Approve all pending translations">
+                        <i class="fas fa-check-double"></i> Approve All
+                    </button>
+                    <button id="refreshButton" class="btn btn-secondary btn-refresh" title="Refresh list">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pending Translations List -->
+            <div class="review-container">
+                <div id="pendingTranslations" class="translations-list">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Loading pending translations...</p>
+                    </div>
+                </div>
+                
+                <div id="emptyState" class="empty-state hidden">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>No Pending Translations!</h3>
+                    <p>All translations have been reviewed. Great work!</p>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                    </a>
+                </div>
+
+                <div id="errorState" class="error-state hidden">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Failed to Load Translations</h3>
+                    <p>Could not load pending translations. Please try again.</p>
+                    <button onclick="loadPendingTranslations()" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="admin-footer">
+            <p>Runyankore Translator Admin Panel • {{ current_year }}</p>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-clipboard-check"></i> Review Translation</h3>
+                <button class="close-modal" onclick="closeReviewModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="translation-review">
+                    <div class="translation-pair">
+                        <div class="language-card">
+                            <h4><i class="fas fa-flag"></i> Runyankore</h4>
+                            <div class="text-display" id="reviewRunyankore"></div>
+                        </div>
+                        <div class="arrow-icon">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="language-card">
+                            <h4><i class="fas fa-flag-usa"></i> English</h4>
+                            <div class="text-display" id="reviewEnglish"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="translation-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-tag"></i>
+                            <span>Category: <strong id="reviewCategory"></strong></span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>Submitted: <strong id="reviewDate"></strong></span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <span>Added by: <strong id="reviewAddedBy"></strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="editBtn" class="btn btn-warning" onclick="startEditing()">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button id="rejectBtn" class="btn btn-danger" onclick="rejectTranslation()">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+                <button id="approveBtn" class="btn btn-success" onclick="approveTranslation()">
+                    <i class="fas fa-check"></i> Approve
+                </button>
+                <button id="finishEditBtn" class="btn btn-primary hidden" onclick="finishEditing()">
+                    <i class="fas fa-check-circle"></i> Finish
+                </button>
+                <button id="cancelEditBtn" class="btn btn-secondary hidden" onclick="cancelEditing()">
+                    <i class="fas fa-times-circle"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentReviewId = null;
+        let allTranslations = [];
+        let isProcessing = false;
+        let isEditing = false;
+        let originalRunyankore = '';
+        let originalEnglish = '';
+
+        // DOM elements cache
+        const elements = {
+            pendingTranslations: document.getElementById('pendingTranslations'),
+            emptyState: document.getElementById('emptyState'),
+            errorState: document.getElementById('errorState'),
+            pendingCount: document.getElementById('pendingCount'),
+            reviewModal: document.getElementById('reviewModal'),
+            refreshButton: document.getElementById('refreshButton'),
+            approveAllButton: document.getElementById('approveAllButton'),
+            editBtn: document.getElementById('editBtn'),
+            approveBtn: document.getElementById('approveBtn'),
+            rejectBtn: document.getElementById('rejectBtn'),
+            finishEditBtn: document.getElementById('finishEditBtn'),
+            cancelEditBtn: document.getElementById('cancelEditBtn')
+        };
+
+        // Load pending translations
+        async function loadPendingTranslations() {
+            if (isProcessing) return;
+            
+            try {
+                showLoadingState();
+                elements.errorState.classList.add('hidden');
+                
+                const response = await fetch('/admin/api/translations/pending');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.translations && data.translations.length > 0) {
+                    allTranslations = data.translations;
+                    renderTranslations();
+                    elements.emptyState.classList.add('hidden');
+                    elements.pendingTranslations.classList.remove('hidden');
+                    updatePendingCount(data.translations.length);
+                } else {
+                    allTranslations = [];
+                    elements.pendingTranslations.innerHTML = '';
+                    elements.pendingTranslations.classList.add('hidden');
+                    elements.emptyState.classList.remove('hidden');
+                    updatePendingCount(0);
+                }
+            } catch (error) {
+                console.error('Error loading pending translations:', error);
+                showErrorState();
+                updatePendingCount(0);
+            } finally {
+                isProcessing = false;
+                elements.refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                elements.refreshButton.disabled = false;
+                elements.approveAllButton.disabled = false;
+                elements.approveAllButton.innerHTML = '<i class="fas fa-check-double"></i> Approve All';
+            }
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            elements.pendingTranslations.innerHTML = `
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Loading pending translations...</p>
+                </div>
+            `;
+            elements.pendingTranslations.classList.remove('hidden');
+            elements.emptyState.classList.add('hidden');
+            elements.errorState.classList.add('hidden');
+        }
+
+        // Show error state
+        function showErrorState() {
+            elements.pendingTranslations.classList.add('hidden');
+            elements.emptyState.classList.add('hidden');
+            elements.errorState.classList.remove('hidden');
+        }
+
+        // Render translations from global array
+        function renderTranslations() {
+            if (!allTranslations || allTranslations.length === 0) {
+                elements.pendingTranslations.innerHTML = '';
+                elements.pendingTranslations.classList.add('hidden');
+                elements.emptyState.classList.remove('hidden');
+                return;
+            }
+
+            let html = '';
+            allTranslations.forEach(translation => {
+                html += `
+                    <div class="translation-item" data-id="${translation.id}">
+                        <div class="translation-content">
+                            <div class="language-pair">
+                                <span class="runyankore-text" title="${translation.runyankore || 'N/A'}">
+                                    ${translation.runyankore || 'N/A'}
+                                </span>
+                                <i class="fas fa-arrow-right"></i>
+                                <span class="english-text" title="${translation.english || 'N/A'}">
+                                    ${translation.english || 'N/A'}
+                                </span>
+                            </div>
+                            <div class="translation-info">
+                                <span class="category-badge">${translation.category || 'general'}</span>
+                                <span class="date-info">
+                                    <i class="far fa-calendar"></i> 
+                                    ${new Date(translation.created_at).toLocaleDateString()}
+                                </span>
+                                <span class="added-by">
+                                    <i class="far fa-user"></i> 
+                                    Added by: ${translation.added_by || 'user'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="translation-actions">
+                            <button class="btn btn-secondary" onclick="viewTranslation(${translation.id})">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="btn btn-warning" onclick="editTranslationInList(${translation.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger" onclick="rejectTranslation(${translation.id})">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                            <button class="btn btn-success" onclick="approveTranslation(${translation.id})">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            elements.pendingTranslations.innerHTML = html;
+        }
+
+        // Update pending count
+        function updatePendingCount(count) {
+            elements.pendingCount.innerHTML = count > 0 
+                ? `<i class="fas fa-clock"></i> ${count} Pending`
+                : `<i class="fas fa-check-circle"></i> 0 Pending`;
+        }
+
+        // View translation details
+        async function viewTranslation(id) {
+            if (isProcessing) return;
+            
+            try {
+                isProcessing = true;
+                const response = await fetch(`/admin/api/translations/get/${id}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.translation) {
+                    const translation = data.translation;
+                    document.getElementById('reviewRunyankore').textContent = translation.runyankore || 'N/A';
+                    document.getElementById('reviewEnglish').textContent = translation.english || 'N/A';
+                    document.getElementById('reviewCategory').textContent = translation.category || 'general';
+                    document.getElementById('reviewDate').textContent = new Date(translation.created_at).toLocaleString();
+                    document.getElementById('reviewAddedBy').textContent = translation.added_by || 'user';
+                    
+                    currentReviewId = id;
+                    elements.reviewModal.classList.add('active');
+                    resetEditState();
+                } else {
+                    showNotification('Failed to load translation details', 'error');
+                }
+            } catch (error) {
+                console.error('Error viewing translation:', error);
+                showNotification('Failed to load translation details', 'error');
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // Start editing in modal
+        function startEditing() {
+            if (!currentReviewId || isProcessing) return;
+            
+            const runyankoreElem = document.getElementById('reviewRunyankore');
+            const englishElem = document.getElementById('reviewEnglish');
+            
+            // Save original values
+            originalRunyankore = runyankoreElem.textContent;
+            originalEnglish = englishElem.textContent;
+            
+            // Replace text with textareas
+            runyankoreElem.innerHTML = `<textarea id="editRunyankore" class="edit-textarea">${originalRunyankore}</textarea>`;
+            englishElem.innerHTML = `<textarea id="editEnglish" class="edit-textarea">${originalEnglish}</textarea>`;
+            
+            // Update UI state
+            isEditing = true;
+            elements.editBtn.classList.add('hidden');
+            elements.approveBtn.classList.add('hidden');
+            elements.rejectBtn.classList.add('hidden');
+            elements.finishEditBtn.classList.remove('hidden');
+            elements.cancelEditBtn.classList.remove('hidden');
+        }
+
+        // Finish editing
+        async function finishEditing() {
+            if (!currentReviewId || !isEditing || isProcessing) return;
+            
+            const editedRunyankore = document.getElementById('editRunyankore').value.trim();
+            const editedEnglish = document.getElementById('editEnglish').value.trim();
+            
+            if (!editedRunyankore || !editedEnglish) {
+                showNotification('Both fields are required', 'error');
+                return;
+            }
+            
+            try {
+                isProcessing = true;
+                elements.finishEditBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving';
+                elements.finishEditBtn.disabled = true;
+                
+                const response = await fetch(`/admin/api/translations/update/${currentReviewId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        runyankore: editedRunyankore,
+                        english: editedEnglish
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('✅ Translation updated successfully!', 'success');
+                    
+                    // Update in global array
+                    const translationIndex = allTranslations.findIndex(t => t.id === currentReviewId);
+                    if (translationIndex !== -1) {
+                        allTranslations[translationIndex].runyankore = editedRunyankore;
+                        allTranslations[translationIndex].english = editedEnglish;
+                        
+                        // Update the display in modal
+                        document.getElementById('reviewRunyankore').textContent = editedRunyankore;
+                        document.getElementById('reviewEnglish').textContent = editedEnglish;
+                        
+                        // Re-render the list to show updated values
+                        renderTranslations();
+                    }
+                    
+                    // Exit edit mode
+                    cancelEditing();
+                } else {
+                    showNotification(`❌ Failed to update: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating translation:', error);
+                showNotification('❌ Failed to update translation', 'error');
+            } finally {
+                isProcessing = false;
+                elements.finishEditBtn.innerHTML = '<i class="fas fa-check-circle"></i> Finish';
+                elements.finishEditBtn.disabled = false;
+            }
+        }
+
+        // Cancel editing
+        function cancelEditing() {
+            if (!isEditing) return;
+            
+            // Restore original values
+            document.getElementById('reviewRunyankore').textContent = originalRunyankore;
+            document.getElementById('reviewEnglish').textContent = originalEnglish;
+            
+            // Update UI state
+            isEditing = false;
+            elements.editBtn.classList.remove('hidden');
+            elements.approveBtn.classList.remove('hidden');
+            elements.rejectBtn.classList.remove('hidden');
+            elements.finishEditBtn.classList.add('hidden');
+            elements.cancelEditBtn.classList.add('hidden');
+            
+            originalRunyankore = '';
+            originalEnglish = '';
+        }
+
+        // Edit translation directly from list
+        function editTranslationInList(id) {
+            const translationItem = document.querySelector(`.translation-item[data-id="${id}"]`);
+            if (!translationItem) return;
+            
+            const runyankoreSpan = translationItem.querySelector('.runyankore-text');
+            const englishSpan = translationItem.querySelector('.english-text');
+            const actionsDiv = translationItem.querySelector('.translation-actions');
+            
+            // Save original values
+            const originalRunyankore = runyankoreSpan.textContent;
+            const originalEnglish = englishSpan.textContent;
+            
+            // Escape quotes for HTML attribute
+            const escapedRunyankore = originalRunyankore.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const escapedEnglish = originalEnglish.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            
+            // Replace with inputs
+            runyankoreSpan.innerHTML = `<input type="text" class="edit-input" value="${escapedRunyankore}" id="list-edit-runyankore-${id}">`;
+            englishSpan.innerHTML = `<input type="text" class="edit-input" value="${escapedEnglish}" id="list-edit-english-${id}">`;
+            
+            // Replace action buttons with edit controls
+            actionsDiv.innerHTML = `
+                <button class="btn btn-success" onclick="saveListEdit(${id})">
+                    <i class="fas fa-check-circle"></i> Finish
+                </button>
+                <button class="btn btn-secondary" onclick="cancelListEdit()">
+                    <i class="fas fa-times-circle"></i> Cancel
+                </button>
+            `;
+        }
+
+        // Save edit from list
+        async function saveListEdit(id) {
+            if (isProcessing) return;
+            
+            const editedRunyankore = document.getElementById(`list-edit-runyankore-${id}`).value.trim();
+            const editedEnglish = document.getElementById(`list-edit-english-${id}`).value.trim();
+            
+            if (!editedRunyankore || !editedEnglish) {
+                showNotification('Both fields are required', 'error');
+                return;
+            }
+            
+            try {
+                isProcessing = true;
+                
+                const response = await fetch(`/admin/api/translations/update/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        runyankore: editedRunyankore,
+                        english: editedEnglish
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('✅ Translation updated successfully!', 'success');
+                    
+                    // Update in global array
+                    const translationIndex = allTranslations.findIndex(t => t.id === id);
+                    if (translationIndex !== -1) {
+                        allTranslations[translationIndex].runyankore = editedRunyankore;
+                        allTranslations[translationIndex].english = editedEnglish;
+                    }
+                    
+                    // Re-render the list to show updated values
+                    renderTranslations();
+                } else {
+                    showNotification(`❌ ${data.error || data.message || 'Failed to update'}`, 'error');
+                    // Revert to original rendering
+                    renderTranslations();
+                }
+            } catch (error) {
+                console.error('Error updating translation:', error);
+                showNotification('❌ Failed to update translation', 'error');
+                // Revert to original rendering
+                renderTranslations();
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // Cancel edit from list
+        function cancelListEdit() {
+            // Simply re-render the list to restore original state
+            renderTranslations();
+        }
+
+        // Reset edit state when closing modal
+        function resetEditState() {
+            isEditing = false;
+            originalRunyankore = '';
+            originalEnglish = '';
+            elements.editBtn.classList.remove('hidden');
+            elements.approveBtn.classList.remove('hidden');
+            elements.rejectBtn.classList.remove('hidden');
+            elements.finishEditBtn.classList.add('hidden');
+            elements.cancelEditBtn.classList.add('hidden');
+        }
+
+        // Close review modal
+        function closeReviewModal() {
+            elements.reviewModal.classList.remove('active');
+            currentReviewId = null;
+            resetEditState();
+            elements.approveBtn.innerHTML = '<i class="fas fa-check"></i> Approve';
+            elements.approveBtn.disabled = false;
+            elements.rejectBtn.innerHTML = '<i class="fas fa-times"></i> Reject';
+            elements.rejectBtn.disabled = false;
+        }
+
+        // Approve translation
+        async function approveTranslation(id = null) {
+            const translationId = id || currentReviewId;
+            if (!translationId || isProcessing) return;
+            
+            // Get current values (check if we're in edit mode)
+            let runyankore, english;
+            
+            if (currentReviewId === translationId && isEditing) {
+                // Get edited values from modal
+                runyankore = document.getElementById('editRunyankore')?.value.trim();
+                english = document.getElementById('editEnglish')?.value.trim();
+                
+                if (!runyankore || !english) {
+                    showNotification('Cannot approve: Both fields must be filled', 'error');
+                    return;
+                }
+            } else {
+                // Get from local array
+                const translation = allTranslations.find(t => t.id === translationId);
+                if (!translation) {
+                    showNotification('Translation not found', 'error');
+                    return;
+                }
+                runyankore = translation.runyankore;
+                english = translation.english;
+            }
+            
+            if (!confirm(`Are you sure you want to approve this translation?\n\nRunyankore: ${runyankore}\nEnglish: ${english}`)) return;
+            
+            try {
+                isProcessing = true;
+                if (currentReviewId === translationId) {
+                    elements.approveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing';
+                    elements.approveBtn.disabled = true;
+                }
+                
+                const response = await fetch(`/admin/api/translations/approve/${translationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        runyankore: runyankore,
+                        english: english
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('✅ Translation approved successfully!', 'success');
+                    
+                    // Remove from global array
+                    allTranslations = allTranslations.filter(t => t.id !== translationId);
+                    
+                    // Re-render the list
+                    renderTranslations();
+                    updatePendingCount(allTranslations.length);
+                    
+                    // Close modal if open
+                    if (currentReviewId === translationId) {
+                        closeReviewModal();
+                    }
+                } else {
+                    showNotification(`❌ Failed to approve: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error approving translation:', error);
+                showNotification('❌ Failed to approve translation', 'error');
+            } finally {
+                isProcessing = false;
+                if (currentReviewId === translationId) {
+                    elements.approveBtn.innerHTML = '<i class="fas fa-check"></i> Approve';
+                    elements.approveBtn.disabled = false;
+                }
+            }
+        }
+
+        // Approve all translations
+        async function approveAllTranslations() {
+            if (isProcessing || allTranslations.length === 0) return;
+            
+            const count = allTranslations.length;
+            
+            // Show confirmation dialog with count
+            if (!confirm(`Are you sure you want to approve ALL ${count} pending translations?\n\nThis action cannot be undone and will approve all translations without individual review.`)) {
+                return;
+            }
+            
+            try {
+                isProcessing = true;
+                elements.approveAllButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing';
+                elements.approveAllButton.disabled = true;
+                elements.refreshButton.disabled = true;
+                
+                const response = await fetch('/admin/api/translations/approve-all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const approvedCount = data.approved_count || count;
+                    showNotification(`✅ Successfully approved ${approvedCount} translations!`, 'success');
+                    
+                    // Clear the list
+                    allTranslations = [];
+                    
+                    // Re-render the list (will show empty state)
+                    renderTranslations();
+                    updatePendingCount(0);
+                    
+                    // Update UI
+                    elements.emptyState.classList.remove('hidden');
+                    elements.pendingTranslations.classList.add('hidden');
+                } else {
+                    showNotification(`❌ Failed to approve all: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error approving all translations:', error);
+                showNotification('❌ Failed to approve all translations', 'error');
+            } finally {
+                isProcessing = false;
+                elements.approveAllButton.innerHTML = '<i class="fas fa-check-double"></i> Approve All';
+                elements.approveAllButton.disabled = false;
+                elements.refreshButton.disabled = false;
+            }
+        }
+
+        // Reject translation
+        async function rejectTranslation(id = null) {
+            const translationId = id || currentReviewId;
+            if (!translationId || isProcessing) return;
+            
+            if (!confirm('Are you sure you want to reject this translation? It will be moved to trash.')) return;
+            
+            try {
+                isProcessing = true;
+                if (currentReviewId === translationId) {
+                    elements.rejectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing';
+                    elements.rejectBtn.disabled = true;
+                }
+                
+                const response = await fetch(`/admin/api/translations/reject/${translationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('🗑️ Translation rejected and moved to trash!', 'success');
+                    
+                    // Remove from global array
+                    allTranslations = allTranslations.filter(t => t.id !== translationId);
+                    
+                    // Re-render the list
+                    renderTranslations();
+                    updatePendingCount(allTranslations.length);
+                    
+                    // Close modal if open
+                    if (currentReviewId === translationId) {
+                        closeReviewModal();
+                    }
+                } else {
+                    showNotification(`❌ Failed to reject: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error rejecting translation:', error);
+                showNotification('❌ Failed to reject translation', 'error');
+            } finally {
+                isProcessing = false;
+                if (currentReviewId === translationId) {
+                    elements.rejectBtn.innerHTML = '<i class="fas fa-times"></i> Reject';
+                    elements.rejectBtn.disabled = false;
+                }
+            }
+        }
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            // Remove existing notification
+            const existing = document.querySelector('.notification-toast');
+            if (existing) existing.remove();
+            
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.className = `notification-toast notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="notification-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 10);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Add notification styles
+        function addNotificationStyles() {
+            if (!document.getElementById('notification-styles')) {
+                const style = document.createElement('style');
+                style.id = 'notification-styles';
+                style.textContent = `
+                    .notification-toast {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: white;
+                        border-radius: 8px;
+                        padding: 15px 20px;
+                        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+                        z-index: 10000;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        max-width: 400px;
+                        transform: translateX(120%);
+                        transition: transform 0.3s ease;
+                        border-left: 4px solid #3b82f6;
+                    }
+                    
+                    .notification-toast.show {
+                        transform: translateX(0);
+                    }
+                    
+                    .notification-success {
+                        border-left-color: #10b981;
+                    }
+                    
+                    .notification-error {
+                        border-left-color: #ef4444;
+                    }
+                    
+                    .notification-content {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        flex: 1;
+                    }
+                    
+                    .notification-content i {
+                        font-size: 1.2rem;
+                    }
+                    
+                    .notification-success .notification-content i {
+                        color: #10b981;
+                    }
+                    
+                    .notification-error .notification-content i {
+                        color: #ef4444;
+                    }
+                    
+                    .notification-close {
+                        background: none;
+                        border: none;
+                        color: #9ca3af;
+                        cursor: pointer;
+                        padding: 0;
+                        font-size: 0.9rem;
+                        transition: color 0.2s;
+                    }
+                    
+                    .notification-close:hover {
+                        color: #6b7280;
+                    }
+                    
+                    .edit-textarea {
+                        width: 100%;
+                        min-height: 80px;
+                        padding: 8px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        resize: vertical;
+                    }
+                    
+                    .edit-input {
+                        width: 100%;
+                        padding: 4px 8px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        font-size: 14px;
+                    }
+                    
+                    .hidden {
+                        display: none !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Refresh button
+            elements.refreshButton.addEventListener('click', function() {
+                if (!isProcessing) {
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing';
+                    this.disabled = true;
+                    loadPendingTranslations();
+                }
+            });
+            
+            // Approve All button
+            elements.approveAllButton.addEventListener('click', function() {
+                if (!isProcessing && allTranslations.length > 0) {
+                    approveAllTranslations();
+                }
+            });
+            
+            // Close modal when clicking outside
+            elements.reviewModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeReviewModal();
+                }
+            });
+            
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && elements.reviewModal.classList.contains('active')) {
+                    if (isEditing) {
+                        cancelEditing();
+                    } else {
+                        closeReviewModal();
+                    }
+                }
+            });
+        }
+
+        // Auto-refresh every 5 minutes
+        function startAutoRefresh() {
+            setInterval(() => {
+                if (!isProcessing && document.visibilityState === 'visible') {
+                    loadPendingTranslations();
+                }
+            }, 300000); // 5 minutes
+        }
+
+        // Initialize page
+        function init() {
+            addNotificationStyles();
+            setupEventListeners();
+            loadPendingTranslations();
+            startAutoRefresh();
+        }
+
+        // Start when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

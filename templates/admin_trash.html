@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trash Bin - Runyankore Translator Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Move inline styles here */
+        .trash-empty-icon {
+            font-size: 4rem;
+            color: #9ca3af;
+        }
+        .back-to-translations {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-language" aria-hidden="true"></i>
+                    <h2>Runyankore Admin</h2>
+                </div>
+                <div class="user-info">
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                    <span>{{ username }}</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
+                    <i class="fas fa-tachometer-alt" aria-hidden="true"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
+                    <i class="fas fa-list" aria-hidden="true"></i> Translations
+                </a>
+                <a href="#" class="nav-item" id="addTranslationBtn">
+                    <i class="fas fa-plus-circle" aria-hidden="true"></i> Add Translation
+                </a>
+                <a href="{{ url_for('admin_trash') }}" class="nav-item active" aria-current="page">
+                    <i class="fas fa-trash" aria-hidden="true"></i> Trash Bin
+                </a>
+                <div class="nav-divider" aria-hidden="true"></div>
+                <a href="{{ url_for('admin_logout') }}" class="nav-item logout">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p><i class="fas fa-database" aria-hidden="true"></i> SQLite Database</p>
+                <p>Version: 2.0.0</p>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1><i class="fas fa-trash" aria-hidden="true"></i> Trash Bin</h1>
+                <div class="top-bar-actions">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i> Back to Dashboard
+                    </a>
+                    <button class="btn-danger" id="emptyTrashBtn" 
+                            {% if not translations %}disabled{% endif %}
+                            aria-label="Empty all items from trash bin">
+                        <i class="fas fa-broom" aria-hidden="true"></i> Empty Trash
+                    </button>
+                </div>
+            </header>
+            
+            <div class="dashboard-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-red">
+                            <i class="fas fa-trash" aria-hidden="true"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>{{ translations|length }}</h3>
+                            <p>Items in Trash</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-orange">
+                            <i class="fas fa-history" aria-hidden="true"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>
+                                {% if trash_stats.oldest_date %}
+                                    {{ trash_stats.oldest_date[:10] }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h3>
+                            <p>Oldest Item</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-blue">
+                            <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>{{ trash_stats.categories|length }}</h3>
+                            <p>Categories</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-green">
+                            <i class="fas fa-database" aria-hidden="true"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Recoverable</h3>
+                            <p>All Items</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bulk Actions -->
+                <div class="bulk-actions-bar" id="bulkActionsBar" hidden>
+                    <div class="bulk-actions-left">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        <span id="selectedCount">0</span> items selected
+                    </div>
+                    <div class="bulk-actions-right">
+                        <button class="btn-secondary" id="cancelBulkSelect" aria-label="Cancel selection">
+                            <i class="fas fa-times" aria-hidden="true"></i> Cancel
+                        </button>
+                        <button class="btn-success" id="bulkRestoreBtn" aria-label="Restore selected items">
+                            <i class="fas fa-undo" aria-hidden="true"></i> Restore Selected
+                        </button>
+                        <button class="btn-danger" id="bulkDeleteBtn" aria-label="Permanently delete selected items">
+                            <i class="fas fa-trash" aria-hidden="true"></i> Delete Selected
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Search and Filters -->
+                <div class="search-filters">
+                    <div class="search-box">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="text" id="searchTrash" placeholder="Search in trash..." 
+                               aria-label="Search deleted translations">
+                    </div>
+                    <div class="filters">
+                        <select id="filterCategory" aria-label="Filter by category">
+                            <option value="">All Categories</option>
+                            <option value="general">General</option>
+                            <option value="greetings">Greetings</option>
+                            <option value="food">Food</option>
+                            <option value="family">Family</option>
+                            <option value="animals">Animals</option>
+                            <option value="verbs">Verbs</option>
+                            <option value="nouns">Nouns</option>
+                        </select>
+                        <select id="filterDate" aria-label="Filter by deletion date">
+                            <option value="">All Time</option>
+                            <option value="7">Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 3 months</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Trash Items Table -->
+                <div class="translations-table-container">
+                    <h2><i class="fas fa-trash-restore" aria-hidden="true"></i> Deleted Translations</h2>
+                    
+                    {% if translations %}
+                    <div class="table-responsive">
+                        <table class="translations-table" id="trashTable" aria-describedby="trashTableDescription">
+                            <caption class="sr-only" id="trashTableDescription">Table showing deleted translations that can be restored or permanently deleted</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col" width="50">
+                                        <label for="selectAllCheckbox" class="sr-only">Select all items</label>
+                                        <input type="checkbox" id="selectAllCheckbox" aria-label="Select all items in trash">
+                                    </th>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Runyankore</th>
+                                    <th scope="col">English</th>
+                                    <th scope="col">Category</th>
+                                    <th scope="col">Deleted On</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trans in translations %}
+                                <tr data-translation-id="{{ trans.id }}" 
+                                    data-category="{{ trans.category or 'general' }}"
+                                    data-deleted-at="{{ trans.deleted_at or '' }}">
+                                    <td>
+                                        <label for="item-checkbox-{{ trans.id }}" class="sr-only">Select translation {{ trans.id }}</label>
+                                        <input type="checkbox" id="item-checkbox-{{ trans.id }}" class="item-checkbox" value="{{ trans.id }}">
+                                    </td>
+                                    <td>{{ trans.id }}</td>
+                                    <td><strong>{{ trans.runyankore }}</strong></td>
+                                    <td>{{ trans.english }}</td>
+                                    <td>
+                                        <span class="category-badge">{{ trans.category or 'general' }}</span>
+                                    </td>
+                                    <td>
+                                        {% if trans.deleted_at %}
+                                            {{ trans.deleted_at[:19] }}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </td>
+                                    <td class="action-buttons">
+                                        <button class="btn-success btn-restore" 
+                                                data-id="{{ trans.id }}"
+                                                aria-label="Restore translation {{ trans.id }}">
+                                            <i class="fas fa-undo" aria-hidden="true"></i>
+                                        </button>
+                                        <button class="btn-danger btn-permanent-delete" 
+                                                data-id="{{ trans.id }}"
+                                                aria-label="Permanently delete translation {{ trans.id }}">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- No Results Message (hidden by default) -->
+                    <div id="noResultsMessage" hidden>
+                        <div class="empty-state">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <h3>No items found</h3>
+                            <p>Try changing your search or filters</p>
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <!-- Empty Trash State -->
+                    <div class="empty-state">
+                        <i class="fas fa-trash-alt trash-empty-icon" aria-hidden="true"></i>
+                        <h3>Trash Bin is Empty</h3>
+                        <p>Deleted translations will appear here</p>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn-primary back-to-translations">
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i> Back to Translations
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Categories in Trash -->
+                {% if trash_stats.categories %}
+                <div class="system-info-card">
+                    <h2><i class="fas fa-tags" aria-hidden="true"></i> Categories in Trash</h2>
+                    <div class="categories-grid">
+                        {% for category in trash_stats.categories %}
+                        <div class="category-item">
+                            <span class="category-badge">{{ category[0] or 'general' }}</span>
+                            <span class="category-count">{{ category[1] }} items</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Important Note -->
+                <div class="warning-message">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                    <div>
+                        <strong>Important:</strong> Items in trash will be automatically 
+                        permanently deleted after 30 days. Empty trash to free up space immediately.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Confirmation Modal for Empty Trash -->
+    <div id="emptyTrashModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="emptyTrashModalTitle" hidden>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="emptyTrashModalTitle"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Empty Trash</h3>
+                <button class="close-modal" id="closeEmptyTrashModal" aria-label="Close empty trash confirmation">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete <strong>ALL {{ translations|length }} items</strong> in the trash?</p>
+                <div class="warning-text" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                    This action cannot be undone. All items will be permanently removed from the database.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelEmptyTrash">Cancel</button>
+                <button class="btn-danger" id="confirmEmptyTrash">
+                    <i class="fas fa-broom" aria-hidden="true"></i> Empty Trash
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div id="notification" class="notification" role="alert" aria-live="polite" hidden></div>
+    
+    <!-- Add CSS for screen readers -->
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+    
+    <!-- Add the external JavaScript -->
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/trash.js') }}"></script>
+</body>
+</html>

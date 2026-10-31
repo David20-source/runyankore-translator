@@ -1,0 +1,966 @@
+/* ========== PROFESSIONAL ADMIN STYLES ========== */
+/* Synonyms Management Styles with Professional Sidebar */
+
+/* Professional Sidebar - Dark Gradient */
+.sidebar {
+    background: linear-gradient(180deg, #1a2639 0%, #0d1b2a 100%);
+    color: #fff;
+    min-height: 100vh;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    z-index: 1000;
+}
+
+.sidebar-header {
+    padding: 25px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 20px;
+}
+
+.sidebar-header h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.sidebar .nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar .nav-item {
+    width: 100%;
+}
+
+.sidebar .nav-link {
+    color: rgba(255,255,255,0.8);
+    padding: 14px 25px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.sidebar .nav-link i {
+    margin-right: 12px;
+    width: 22px;
+    text-align: center;
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.6);
+    transition: all 0.3s ease;
+}
+
+.sidebar .nav-link:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border-left-color: #28a745;
+}
+
+.sidebar .nav-link:hover i {
+    color: #28a745;
+    transform: translateX(3px);
+}
+
+.sidebar .nav-link.active {
+    background: rgba(40, 167, 69, 0.15);
+    color: #fff;
+    border-left-color: #28a745;
+    font-weight: 600;
+}
+
+.sidebar .nav-link.active i {
+    color: #28a745;
+}
+
+/* Main Content Area - Adjust for fixed sidebar */
+.main-content {
+    margin-left: 250px;
+    padding: 20px;
+    background: #f4f7fc;
+    min-height: 100vh;
+}
+
+/* Synonyms Container */
+.synonym-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+.synonym-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    background: white;
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.synonym-header h1 {
+    margin: 0;
+    font-size: 28px;
+    color: #1a2639;
+    font-weight: 600;
+}
+
+.synonym-header h1 i {
+    color: #28a745;
+    margin-right: 10px;
+}
+
+.user-info {
+    background: #f8f9fa;
+    padding: 10px 20px;
+    border-radius: 30px;
+    color: #1a2639;
+    font-weight: 500;
+}
+
+.user-info i {
+    color: #28a745;
+    margin-right: 8px;
+}
+
+/* Stats Card */
+.stats-card {
+    background: linear-gradient(135deg, #1a2639 0%, #2c3e50 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.stats-col {
+    flex: 1;
+    padding: 0 15px;
+}
+
+.stats-number {
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.stats-label {
+    font-size: 15px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 400;
+}
+
+/* Add Synonym Form */
+.add-synonym-form {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #eef2f6;
+}
+
+.add-synonym-form h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #1a2639;
+    font-weight: 600;
+}
+
+.add-synonym-form h3 i {
+    color: #28a745;
+    margin-right: 10px;
+}
+
+.text-muted {
+    color: #6c757d;
+    margin-bottom: 25px;
+    font-size: 14px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #1a2639;
+    font-size: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #28a745;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.1);
+}
+
+.form-control::placeholder {
+    color: #a0aec0;
+    font-size: 14px;
+}
+
+.position-relative {
+    position: relative;
+}
+
+/* Buttons */
+.btn-primary {
+    background: #28a745;
+    color: white;
+    padding: 14px 35px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
+
+.btn-primary:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+}
+
+.btn-primary i {
+    font-size: 1.1rem;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* Search Box */
+.search-box {
+    margin-bottom: 25px;
+}
+
+.search-box .form-control {
+    background: white;
+    border-color: #e1e5e9;
+    padding-left: 45px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 15px center;
+    background-size: 18px;
+}
+
+/* Synonyms List */
+.synonym-list {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid #eef2f6;
+}
+
+.synonym-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 25px;
+    border-bottom: 1px solid #eef2f6;
+    transition: all 0.3s ease;
+}
+
+.synonym-item:last-child {
+    border-bottom: none;
+}
+
+.synonym-item:hover {
+    background: #f8fafc;
+}
+
+.synonym-info {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.synonym-word {
+    font-weight: 700;
+    color: #28a745;
+    font-size: 18px;
+    background: #e8f5e9;
+    padding: 5px 15px;
+    border-radius: 30px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.synonym-arrow {
+    color: #6c757d;
+    font-size: 18px;
+    opacity: 0.6;
+}
+
+.synonym-target {
+    font-weight: 700;
+    color: #1a2639;
+    font-size: 18px;
+    background: #e3f2fd;
+    padding: 5px 15px;
+    border-radius: 30px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.synonym-meta {
+    color: #6c757d;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8f9fa;
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+.synonym-meta i {
+    font-size: 12px;
+    color: #28a745;
+}
+
+.relation-badge {
+    background: #6c757d;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Alerts */
+.alert {
+    padding: 16px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.alert i {
+    font-size: 1.2rem;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+/* Suggestion Box */
+.suggestion-box {
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    margin-top: 2px;
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background: #f0f7ff;
+    color: #28a745;
+    padding-left: 20px;
+}
+
+/* Notification Area */
+.notification-area {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    z-index: 9999;
+    min-width: 300px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: #dee2e6;
+}
+
+.empty-state p {
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.p-4 {
+    padding: 25px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .sidebar {
+        width: 200px;
+    }
+    
+    .main-content {
+        margin-left: 200px;
+    }
+    
+    .synonym-info {
+        gap: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        transform: none;
+        margin-bottom: 20px;
+        border-radius: 0 0 12px 12px;
+    }
+    
+    .sidebar .nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .sidebar .nav-item {
+        width: auto;
+    }
+    
+    .sidebar .nav-link {
+        padding: 12px 15px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+    }
+    
+    .sidebar .nav-link:hover {
+        border-left-color: transparent;
+        border-bottom-color: #28a745;
+    }
+    
+    .sidebar .nav-link.active {
+        border-left-color: transparent;
+        border-bottom-color: #28a745;
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .stats-row {
+        flex-direction: column;
+        gap: 25px;
+    }
+    
+    .synonym-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .synonym-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .synonym-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .notification-area {
+        left: 20px;
+        right: 20px;
+        min-width: auto;
+    }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #28a745;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #218838;
+}
+
+/* ========== MOBILE OPTIMIZATION FOR ANDROID PHONES ========== */
+/* Add this entire section at the END of your CSS file */
+
+/* Extra Small Devices (phones, less than 576px) */
+@media (max-width: 576px) {
+    /* Better touch targets */
+    .sidebar .nav-link {
+        padding: 16px 20px;
+        font-size: 16px;
+    }
+    
+    .sidebar .nav-link i {
+        font-size: 1.3rem;
+        width: 28px;
+    }
+    
+    /* Mobile-friendly header */
+    .synonym-header {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .synonym-header h1 {
+        font-size: 22px;
+    }
+    
+    .synonym-header h1 i {
+        font-size: 20px;
+    }
+    
+    .user-info {
+        padding: 8px 15px;
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+    }
+    
+    /* Stats card mobile optimization */
+    .stats-card {
+        padding: 20px 15px;
+    }
+    
+    .stats-number {
+        font-size: 32px;
+    }
+    
+    .stats-label {
+        font-size: 13px;
+    }
+    
+    /* Form improvements for mobile */
+    .add-synonym-form {
+        padding: 20px 15px;
+    }
+    
+    .add-synonym-form h3 {
+        font-size: 20px;
+    }
+    
+    .form-group label {
+        font-size: 14px;
+    }
+    
+    .form-control {
+        padding: 16px 14px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none; /* Standard property */
+        border-radius: 8px;
+    }
+    
+    /* Full-width buttons on mobile */
+    .btn-primary {
+        width: 100%;
+        justify-content: center;
+        padding: 16px 20px;
+        font-size: 16px;
+    }
+    
+    /* Synonym items mobile layout */
+    .synonym-item {
+        padding: 15px;
+    }
+    
+    .synonym-info {
+        width: 100%;
+    }
+    
+    .synonym-word, .synonym-target {
+        font-size: 16px;
+        padding: 6px 12px;
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+    
+    .synonym-arrow {
+        align-self: center;
+        margin: 5px 0;
+        transform: rotate(90deg); /* Arrow points down on mobile */
+    }
+    
+    .synonym-meta {
+        width: 100%;
+        justify-content: center;
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+    
+    /* Delete button on mobile */
+    .btn-danger {
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    /* Suggestion box mobile */
+    .suggestion-box {
+        max-height: 200px;
+    }
+    
+    .suggestion-item {
+        padding: 15px 16px;
+        font-size: 16px;
+    }
+    
+    /* Notification area mobile */
+    .notification-area {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        min-width: auto;
+    }
+    
+    .alert {
+        padding: 14px 16px;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    
+    /* Empty state mobile */
+    .empty-state {
+        padding: 40px 15px;
+    }
+    
+    .empty-state i {
+        font-size: 48px;
+    }
+    
+    .empty-state p {
+        font-size: 14px;
+    }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 577px) and (max-width: 767px) {
+    .synonym-info {
+        gap: 12px;
+    }
+    
+    .synonym-word, .synonym-target {
+        font-size: 16px;
+        padding: 4px 12px;
+    }
+    
+    .synonym-meta {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+    
+    .btn-primary {
+        padding: 12px 25px;
+    }
+}
+
+/* Fix for very small devices (less than 400px) */
+@media (max-width: 400px) {
+    .sidebar .nav-link {
+        padding: 14px 15px;
+        font-size: 15px;
+    }
+    
+    .sidebar .nav-link i {
+        font-size: 1.2rem;
+        width: 24px;
+    }
+    
+    .synonym-header h1 {
+        font-size: 20px;
+    }
+    
+    .stats-number {
+        font-size: 28px;
+    }
+    
+    .stats-label {
+        font-size: 12px;
+    }
+    
+    .synonym-word, .synonym-target {
+        font-size: 15px;
+        padding: 5px 10px;
+    }
+}
+
+/* Add hamburger menu for mobile (optional enhancement) */
+@media (max-width: 768px) {
+    /* Mobile menu toggle button */
+    .mobile-menu-toggle {
+        display: block;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 1001;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        width: 45px;
+        height: 45px;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    /* Show sidebar when active class is added */
+    .sidebar.mobile-active {
+        width: 250px;
+        transform: translateX(0);
+    }
+    
+    /* Overlay when menu is open */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    /* Adjust main content padding on mobile */
+    .main-content {
+        padding: 70px 15px 20px 15px;
+    }
+}
+
+/* Prevent text overflow on mobile */
+@media (max-width: 768px) {
+    .synonym-word,
+    .synonym-target,
+    .synonym-meta,
+    .relation-badge {
+        word-break: break-word;
+        white-space: normal;
+        max-width: 100%;
+    }
+    
+    .synonym-info {
+        gap: 10px;
+    }
+}
+
+/* Improve touch targets for mobile */
+@media (max-width: 768px) {
+    .btn-primary,
+    .btn-danger,
+    .nav-link,
+    .suggestion-item,
+    .form-control {
+        min-height: 48px; /* Minimum touch target size */
+    }
+    
+    .nav-link i {
+        min-width: 28px;
+    }
+    
+    /* Better spacing for stacked elements */
+    .synonym-item {
+        margin-bottom: 5px;
+    }
+}
+
+/* Smooth scrolling for all devices */
+@media (max-width: 768px) {
+    .sidebar {
+        overflow-y: auto; /* Works on all browsers */
+    }
+}
+
+/* iOS-specific smooth scrolling */
+@supports (-webkit-overflow-scrolling: touch) {
+    @media (max-width: 768px) {
+        .sidebar {
+            -webkit-overflow-scrolling: touch; /* iOS only */
+        }
+    }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    @media (max-width: 768px) {
+        .form-control {
+            font-size: 16px; /* Prevents zoom on focus in iOS */
+        }
+    }
+}
+/* Landscape orientation optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+    .sidebar {
+        width: 200px;
+    }
+    
+    .sidebar .nav-link {
+        padding: 12px 15px;
+    }
+    
+    .main-content {
+        margin-left: 200px;
+        padding: 15px;
+    }
+    
+    .synonym-header {
+        padding: 12px 15px;
+    }
+    
+    .stats-card {
+        padding: 15px;
+    }
+    
+    .stats-number {
+        font-size: 28px;
+    }
+    
+    .synonym-item {
+        padding: 12px 15px;
+    }
+    
+    .notification-area {
+        top: 10px;
+        right: 10px;
+        min-width: 250px;
+    }
+}
+
+/* High resolution small screens */
+@media (max-width: 360px) and (-webkit-min-device-pixel-ratio: 2) {
+    .synonym-word, .synonym-target {
+        font-size: 14px;
+    }
+    
+    .synonym-meta {
+        font-size: 11px;
+    }
+    
+    .stats-number {
+        font-size: 26px;
+    }
+}
