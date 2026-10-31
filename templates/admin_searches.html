@@ -122,7 +122,6 @@
                         </select>
                     </div>
 
-                    <!-- NEW: Status Filter -->
                     <div class="filter-group">
                         <label for="statusFilter" class="filter-label">Status:</label>
                         <select id="statusFilter" class="filter-select">
@@ -163,7 +162,7 @@
         </div>
     </div>
 
-    <!-- Add Translation Modal - FIXED: Removed readonly to allow editing -->
+    <!-- Add Translation Modal -->
     <div id="addTranslationModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -232,38 +231,32 @@
         });
 
         function setupEventListeners() {
-    document.getElementById('searchFilter').addEventListener('input', debounce(loadSearches, 500));
-    document.getElementById('directionFilter').addEventListener('change', loadSearches);
-    document.getElementById('statusFilter').addEventListener('change', loadSearches);
-    // REMOVED the line with 'includeReviewed' since it doesn't exist
-    
-    document.getElementById('refreshBtn').addEventListener('click', function() {
-        // Reset filters to default
-        document.getElementById('searchFilter').value = '';
-        document.getElementById('directionFilter').value = '';
-        document.getElementById('statusFilter').value = 'all';
-        
-        // Then reload
-        loadStats();
-        loadSearches();
-    });
+            document.getElementById('searchFilter').addEventListener('input', debounce(loadSearches, 500));
+            document.getElementById('directionFilter').addEventListener('change', loadSearches);
+            document.getElementById('statusFilter').addEventListener('change', loadSearches);
+            
+            document.getElementById('refreshBtn').addEventListener('click', function() {
+                document.getElementById('searchFilter').value = '';
+                document.getElementById('directionFilter').value = '';
+                document.getElementById('statusFilter').value = 'all';
+                loadStats();
+                loadSearches();
+            });
 
-    // Modal close buttons
-    document.querySelectorAll('.close').forEach(btn => {
-        btn.addEventListener('click', function() {
-            closeModal();
-            closeNotesModal();
-        });
-    });
+            document.querySelectorAll('.close').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    closeModal();
+                    closeNotesModal();
+                });
+            });
 
-    // Click outside modal to close
-    window.addEventListener('click', function(event) {
-        if (event.target.classList.contains('modal')) {
-            closeModal();
-            closeNotesModal();
+            window.addEventListener('click', function(event) {
+                if (event.target.classList.contains('modal')) {
+                    closeModal();
+                    closeNotesModal();
+                }
+            });
         }
-    });
-}
 
         function debounce(func, wait) {
             let timeout;
@@ -294,7 +287,6 @@
             document.getElementById('failed').textContent = stats.failed || 0;
             document.getElementById('needsReview').textContent = stats.needs_review || 0;
 
-            // Update missing words
             const missingContainer = document.getElementById('missingWords');
             if (stats.top_missing && stats.top_missing.length > 0) {
                 let html = '';
@@ -313,34 +305,33 @@
             }
         }
 
-    function loadSearches() {
-    const searchTerm = document.getElementById('searchFilter').value;
-    const direction = document.getElementById('directionFilter').value;
-    const status = document.getElementById('statusFilter').value;
+        function loadSearches() {
+            const searchTerm = document.getElementById('searchFilter').value;
+            const direction = document.getElementById('directionFilter').value;
+            const status = document.getElementById('statusFilter').value;
 
-    let url = '/admin/api/searches?limit=100';
-    
-    // Handle status filter
-    if (status === 'pending') {
-        url += '&include_reviewed=false';  // Only pending (needs_review = true)
-    } else if (status === 'reviewed') {
-        url += '&include_reviewed=true&reviewed_only=true';  // Only reviewed
-    } else {
-        url += '&include_reviewed=true';  // All searches - THIS IS THE KEY!
-    }
-    
-    if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
-    if (direction) url += `&direction=${direction}`;
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                displaySearches(data.searches);
+            let url = '/admin/api/searches?limit=100';
+            
+            if (status === 'pending') {
+                url += '&include_reviewed=false';
+            } else if (status === 'reviewed') {
+                url += '&include_reviewed=true&reviewed_only=true';
+            } else {
+                url += '&include_reviewed=true';
             }
-        })
-        .catch(error => console.error('Error loading searches:', error));
-}
+            
+            if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+            if (direction) url += `&direction=${direction}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displaySearches(data.searches);
+                    }
+                })
+                .catch(error => console.error('Error loading searches:', error));
+        }
 
         function displaySearches(searches) {
             const tbody = document.getElementById('searchesTableBody');
@@ -380,7 +371,6 @@
                         <td>${search.source || '-'}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                        <td class="actions">
-                         <!-- ALWAYS show Add button for ALL searches -->
                            <button class="btn-action btn-add" onclick="openAddModal(${search.id}, '${search.search_text}', '${search.search_direction}')" title="Add translation">
                           <i class="fas fa-plus"></i>
                           </button>
@@ -406,7 +396,6 @@
             currentSearchId = searchId;
             document.getElementById('searchId').value = searchId;
             
-            // Pre-fill the appropriate field based on direction
             if (direction === 'run_to_en') {
                 document.getElementById('runyankore').value = text;
                 document.getElementById('english').value = '';
@@ -414,14 +403,12 @@
                 document.getElementById('runyankore').value = '';
                 document.getElementById('english').value = text;
             } else {
-                // Dictionary search - leave both empty for manual entry
                 document.getElementById('runyankore').value = '';
                 document.getElementById('english').value = '';
             }
             
             document.getElementById('addTranslationModal').style.display = 'block';
             
-            // Focus on the empty field
             if (direction === 'run_to_en') {
                 document.getElementById('english').focus();
             } else {
@@ -443,7 +430,8 @@
                 return;
             }
 
-            fetch('/api/translations/add', {
+            // FIXED: Changed to /admin/api/translations/add for security
+            fetch('/admin/api/translations/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ runyankore, english, category })
@@ -453,7 +441,6 @@
                 if (data.success) {
                     alert('Translation added successfully!');
                     
-                    // Mark the search as reviewed
                     fetch(`/admin/api/searches/mark-reviewed/${currentSearchId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -532,7 +519,6 @@
         }
 
         function quickAdd(word) {
-            // Quick add from missing words - assumes English to Runyankore
             document.getElementById('runyankore').value = '';
             document.getElementById('english').value = word;
             document.getElementById('category').value = 'general';
@@ -540,7 +526,6 @@
             currentSearchId = null;
             document.getElementById('searchId').value = '';
             
-            // Focus on Runyankore field for manual entry
             document.getElementById('runyankore').focus();
         }
     </script>

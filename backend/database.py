@@ -162,27 +162,6 @@ class TranslationDB:
             
             conn.commit()
 
-            # ========== PREMIUM USERS TABLE ==========
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS premium_users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_token TEXT NOT NULL UNIQUE,
-                    phone_number TEXT,
-                    plan TEXT NOT NULL,
-                    transaction_id TEXT UNIQUE,
-                    status TEXT DEFAULT 'pending',
-                    verified_by TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    expires_at TIMESTAMP,
-                    verified_at TIMESTAMP,
-                    last_checked TIMESTAMP
-                )
-            ''')
-            
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_premium_user_token ON premium_users(user_token)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_premium_status ON premium_users(status)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_premium_transaction ON premium_users(transaction_id)')
-
             # ===== NEW: User search requests table =====
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS user_searches (
@@ -1905,7 +1884,6 @@ class TranslationDB:
         except Exception as e:
             return {'success': False, 'error': str(e)}
     
-    # ========== PREMIUM HELPER METHODS ==========
     
     def execute_query(self, query: str, params: tuple = ()) -> bool:
         """Execute a query that doesn't return results (INSERT, UPDATE, DELETE)"""
@@ -1942,131 +1920,6 @@ class TranslationDB:
             print(f"Database fetch_all error: {e}")
             return []
     
-    # ========== PREMIUM USER MANAGEMENT METHODS ==========
-    
-    def save_premium_user(self, user_token: str, phone_number: str, plan: str, 
-                          transaction_id: str, status: str, expires_at: str) -> bool:
-        """Save or update a premium user in database"""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    INSERT OR REPLACE INTO premium_users 
-                    (user_token, phone_number, plan, transaction_id, status, expires_at, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (user_token, phone_number, plan, transaction_id, status, expires_at, datetime.now().isoformat()))
-                conn.commit()
-                return True
-        except Exception as e:
-            print(f"Error saving premium user: {e}")
-            return False
-    
-    def get_premium_user_by_token(self, user_token: str) -> Optional[Dict]:
-        """Get premium user by token"""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    SELECT * FROM premium_users WHERE user_token = ? ORDER BY created_at DESC LIMIT 1
-                ''', (user_token,))
-                row = cursor.fetchone()
-                return dict(row) if row else None
-        except Exception as e:
-            print(f"Error getting premium user: {e}")
-            return None
-    
-    def get_premium_user_by_transaction(self, transaction_id: str) -> Optional[Dict]:
-        """Get premium user by transaction ID"""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    SELECT * FROM premium_users WHERE transaction_id = ?
-                ''', (transaction_id,))
-                row = cursor.fetchone()
-                return dict(row) if row else None
-        except Exception as e:
-            print(f"Error getting premium user by transaction: {e}")
-            return None
-    
-    def get_all_active_premium_users(self) -> List[Dict]:
-        """Get all active premium users"""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    SELECT * FROM premium_users WHERE status = 'active' ORDER BY verified_at DESC
-                ''')
-                return [dict(row) for row in cursor.fetchall()]
-        except Exception as e:
-            print(f"Error getting active premium users: {e}")
-            return []
-    
-    def get_all_pending_premium_users(self) -> List[Dict]:
-        """Get all pending premium users"""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    SELECT * FROM premium_users WHERE status = 'pending' ORDER BY created_at DESC
-                ''')
-                return [dict(row) for row in cursor.fetchall()]
-        except Exception as e:
-            print(f"Error getting pending premium users: {e}")
-            return []
-    
-    def verify_premium_user(self, transaction_id: str, verified_by: str = 'admin') -> bool:
-        """Verify a pending premium user (activate)"""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    UPDATE premium_users 
-                    SET status = 'active', 
-                        verified_by = ?,
-                        verified_at = ?
-                    WHERE transaction_id = ? AND status = 'pending'
-                ''', (verified_by, datetime.now().isoformat(), transaction_id))
-                conn.commit()
-                return cursor.rowcount > 0
-        except Exception as e:
-            print(f"Error verifying premium user: {e}")
-            return False
-    
-    def revoke_premium_user(self, transaction_id: str) -> bool:
-        """Revoke/Unverify a premium user (set back to pending)"""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    UPDATE premium_users 
-                    SET status = 'pending', 
-                        verified_by = NULL,
-                        verified_at = NULL
-                    WHERE transaction_id = ? AND status = 'active'
-                ''', (transaction_id,))
-                conn.commit()
-                return cursor.rowcount > 0
-        except Exception as e:
-            print(f"Error revoking premium user: {e}")
-            return False
-    
-    def update_premium_expiry(self, user_token: str, expires_at: str) -> bool:
-        """Update premium expiry date"""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute('''
-                    UPDATE premium_users 
-                    SET expires_at = ?
-                    WHERE user_token = ?
-                ''', (expires_at, user_token))
-                conn.commit()
-                return cursor.rowcount > 0
-        except Exception as e:
-            print(f"Error updating premium expiry: {e}")
-            return False
-
 # Singleton instance for database
 _db_instance = None
 
@@ -2076,10 +1929,6 @@ def get_database():
     if _db_instance is None:
         _db_instance = TranslationDB()
     return _db_instance
-
-def verify_admin(username: str, password: str) -> bool:
-    """Verify admin credentials"""
-    return username == 'admin' and password == 'admin123'
 
 def migrate_json_to_sqlite(json_path: str) -> int:
     """Migrate JSON dictionary to SQLite database"""

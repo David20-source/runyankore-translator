@@ -1,7 +1,26 @@
-.env
+# Python
 __pycache__/
 *.pyc
 venv/
+env/
+
+# Database (CRITICAL: Prevents pushing your production database)
+*.db
+*.sqlite
+*.sqlite3
+backend/data/*.db
+backend/data/*.sqlite
+
+# Environment variables
+.env
+
+# VS Code and OS
 .vscode/
 .DS_Store
 node_modules/
+
+# Large AI Models (Don't push model weights to GitHub)
+runyankore-embedding-model/
+runyankore-multilingual-model/
+*.safetensors
+*.bin
